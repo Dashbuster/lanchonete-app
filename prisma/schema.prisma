@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// read more about it: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  CASHIER
+  CLIENT
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  ON_SITE
+  MERCADO_PAGO
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(CLIENT)
+  createdAt DateTime @default(now())
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  image       String?
+  order       Int       @default(0)
+  active      Boolean   @default(true)
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  image       String?
+  available   Boolean   @default(true)
+  prepTime    Int       @default(0) @map("prep_time")
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  addonGroups AddonGroup[]
+
+  @@map("products")
+}
+
+model AddonGroup {
+  id        String      @id @default(uuid())
+  name      String
+  minSelect Int         @default(0) @map("min_select")
+  maxSelect Int         @default(0) @map("max_select")
+  required  Boolean     @default(false)
+  productId String?     @map("product_id")
+  product   Product?    @relation(fields: [productId], references: [id])
+  addons    Addon[]
+
+  @@map("addon_groups")
+}
+
+model Addon {
+  id      String     @id @default(uuid())
+  name    String
+  price   Decimal    @db.Decimal(10, 2)
+  groupId String     @map("group_id")
+  group   AddonGroup @relation(fields: [groupId], references: [id])
+
+  @@map("addons")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  status        OrderStatus   @default(PENDING)
+  total         Decimal       @db.Decimal(10, 2)
+  subtotal      Decimal       @db.Decimal(10, 2)
+  deliveryFee   Decimal       @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @map("payment_method")
+  changeFor     Decimal?      @map("change_for") @db.Decimal(10, 2)
+  customerName  String?       @map("customer_name")
+  customerPhone String?       @map("customer_phone")
+  address       String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+  addons    Json?
+
+  @@map("order_items")
+}
+
+model Setting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
