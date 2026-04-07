@@ -72,9 +72,9 @@ const PIE_COLORS = ["#F97316", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4
 
 // ─── Custom Tooltip for Bar Chart ───────────────────────────────────
 
-function CustomBarTooltip({ active, payload }: { active?: boolean; payload?: unknown[] }) {
+function CustomBarTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; revenue: number; orders: number } }> }) {
   if (!active || !payload || payload.length === 0) return null
-  const data = payload?.[0]?.payload as { date: string; revenue: number; orders: number } | undefined
+  const data = payload[0]?.payload
   if (!data) return null
   return (
     <div className="rounded-lg border border-dark-600 bg-dark-700 p-3 shadow-lg">
@@ -94,9 +94,9 @@ function CustomBarTooltip({ active, payload }: { active?: boolean; payload?: unk
 
 // ─── Custom Tooltip for Pie Chart ───────────────────────────────────
 
-function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: unknown[] }) {
+function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { method: string; revenue: number } }> }) {
   if (!active || !payload || payload.length === 0) return null
-  const data = payload?.[0]?.payload as { method: string; revenue: number } | undefined
+  const data = payload[0]?.payload
   if (!data) return null
   return (
     <div className="rounded-lg border border-dark-600 bg-dark-700 p-3 shadow-lg">

@@ -28,7 +28,7 @@ async function parseMultipart(
   const boundaryBuffer = Buffer.from(`--${boundary}`);
 
   // Find the file part
-  const parts = bodyBuffer.split(boundaryBuffer);
+  const parts = bufferSplit(bodyBuffer, boundaryBuffer);
   for (const part of parts) {
     const partStr = part.toString('utf-8', 0, Math.min(part.length, 1000));
 
@@ -66,6 +66,21 @@ async function parseMultipart(
   }
 
   return null;
+}
+
+function bufferSplit(haystack: Buffer, needle: Buffer): Buffer[] {
+  const result: Buffer[] = [];
+  let start = 0;
+  while (start < haystack.length) {
+    const index = haystack.indexOf(needle, start);
+    if (index === -1) {
+      result.push(haystack.subarray(start));
+      break;
+    }
+    result.push(haystack.subarray(start, index));
+    start = index + needle.length;
+  }
+  return result;
 }
 
 function findDoubleCRLF(buffer: Buffer): number {

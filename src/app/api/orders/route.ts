@@ -94,33 +94,28 @@ export async function POST(request: Request) {
 
     const total = subtotal + deliveryFee;
 
-    // Create order and items in a transaction
-    const order = await prisma.$transaction(async (tx) => {
-      const newOrder = await tx.order.create({
-        data: {
-          customerName,
-          customerPhone: customerPhone || null,
-          address: address || null,
-          paymentMethod,
-          changeFor: changeFor || null,
-          subtotal,
-          deliveryFee,
-          total,
-          status: 'PENDING',
-          items: {
-            create: orderItemsData.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-          },
+    const order = await prisma.order.create({
+      data: {
+        customerName,
+        customerPhone: customerPhone || null,
+        address: address || null,
+        paymentMethod,
+        changeFor: changeFor || null,
+        subtotal,
+        deliveryFee,
+        total,
+        status: 'PENDING',
+        items: {
+          create: orderItemsData.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          })),
         },
-        include: {
-          items: true,
-        },
-      });
-
-      return newOrder;
+      },
+      include: {
+        items: true,
+      },
     });
 
     return NextResponse.json(order, { status: 201 });

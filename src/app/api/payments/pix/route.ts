@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { mpClient } from '@/lib/mercadopago';
+import { mpPreference } from '@/lib/mercadopago';
 
 const pixPaymentSchema = z.object({
   orderId: z.string().min(1, 'ID do pedido é obrigatório'),
@@ -53,33 +53,41 @@ export async function POST(request: Request) {
     }));
 
     // Create MercadoPago preference with PIX as payment method
-    const preference = await mpClient.preferences.createPreference({
-      items: preferenceItems,
-      total_amount: Number(order.total),
-      payment_methods: {
-        excluded_payment_types: [
-          { id: 'ticket' },
-          { id: 'debit_card' },
-        ],
-        installments: 1,
-      },
-      metadata: {
-        orderId: order.id,
-      },
-      notification_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/payments/webhook`,
-      external_reference: order.id,
-      back_urls: {
-        success: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${order.id}`,
-        failure: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${order.id}`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${order.id}`,
+    const preference = await mpPreference.create({
+      body: {
+        items: preferenceItems,
+        payment_methods: {
+          excluded_payment_types: [
+            { id: 'ticket' },
+            { id: 'debit_card' },
+          ],
+          installments: 1,
+        },
+        metadata: {
+          orderId: order.id,
+        },
+        notification_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/payments/webhook`,
+        external_reference: order.id,
+        back_urls: {
+          success: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${order.id}`,
+          failure: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${order.id}`,
+          pending: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${order.id}`,
+        },
       },
     });
 
     // Extract PIX data from preference
-    const qrCode =
-      preference.point_of_interaction?.transaction_data?.qr_code || '';
-    const qrCodeBase64 =
-      preference.point_of_interaction?.transaction_data?.qr_code_base64 || '';
+    const prefData = preference as {
+      point_of_interaction?: {
+        transaction_data?: {
+          qr_code?: string;
+          qr_code_base64?: string;
+        };
+      };
+    };
+
+    const qrCode = prefData.point_of_interaction?.transaction_data?.qr_code || '';
+    const qrCodeBase64 = prefData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
 
     if (!qrCode && !qrCodeBase64) {
       return NextResponse.json(

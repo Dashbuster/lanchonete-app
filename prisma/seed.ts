@@ -116,7 +116,7 @@ async function main() {
   console.log(`  ${products.length} products created`)
 
   // Addon Groups
-  const paoGroup = await prisma.addongroup.create({
+  const paoGroup = await prisma.addonGroup.create({
     data: {
       name: "Escolha o Pao",
       minSelect: 1,
@@ -125,7 +125,7 @@ async function main() {
     },
   })
 
-  const adicionaisGroup = await prisma.addongroup.create({
+  const adicionaisGroup = await prisma.addonGroup.create({
     data: {
       name: "Adicionais",
       minSelect: 0,
@@ -134,7 +134,7 @@ async function main() {
     },
   })
 
-  const tamanhoBebidaGroup = await prisma.addongroup.create({
+  const tamanhoBebidaGroup = await prisma.addonGroup.create({
     data: {
       name: "Tamanho da Bebida",
       minSelect: 1,

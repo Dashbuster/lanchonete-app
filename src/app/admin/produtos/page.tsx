@@ -51,7 +51,7 @@ interface Product {
   description: string | null
   price: number
   image: string | null
-  category: { id: string; name: string }
+  category: { id: string; name: string } | null
   available: boolean
   prepTime: number | null
   addonGroups: AddonGroup[]
@@ -225,7 +225,7 @@ export default function ProdutosPage() {
       name: product.name,
       description: product.description || "",
       price: String(product.price),
-      categoryId: product.category.id,
+      categoryId: product.category?.id || "",
       image: product.image,
       available: product.available,
       prepTime: product.prepTime ? String(product.prepTime) : "",
@@ -282,7 +282,7 @@ export default function ProdutosPage() {
         } else {
           setProducts((prev) => [
             ...prev,
-            { ...payload, id: String(Date.now()), addonGroups: payload.addonGroups, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { ...payload, id: String(Date.now()), addonGroups: payload.addonGroups, category: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Product,
           ])
         }
       }
@@ -293,7 +293,7 @@ export default function ProdutosPage() {
       setProducts((prev) =>
         editingProduct
           ? prev.map((p) => (p.id === editingProduct.id ? { ...p, ...payload } : p))
-          : [...prev, { ...payload, id: String(Date.now()), addonGroups: payload.addonGroups, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }]
+          : [...prev, { ...payload, id: String(Date.now()), addonGroups: payload.addonGroups, category: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Product]
       )
       setModalOpen(false)
     } finally {
@@ -329,7 +329,7 @@ export default function ProdutosPage() {
 
   const handleBulkUnavailable = async (categoryId: string) => {
     setProducts((prev) =>
-      prev.map((p) => (p.category.id === categoryId ? { ...p, available: false } : p))
+      prev.map((p) => (p.category?.id === categoryId ? { ...p, available: false } : p))
     )
   }
 
@@ -397,7 +397,9 @@ export default function ProdutosPage() {
   // Group products by category for bulk action
   const categoryProductCount: Record<string, number> = {}
   products.forEach((p) => {
-    categoryProductCount[p.category.id] = (categoryProductCount[p.category.id] || 0) + 1
+    if (p.category) {
+      categoryProductCount[p.category.id] = (categoryProductCount[p.category.id] || 0) + 1
+    }
   })
 
   return (
@@ -419,7 +421,7 @@ export default function ProdutosPage() {
         const count = categoryProductCount[cat.id] || 0
         if (count === 0) return null
         const allAvailable = products
-          .filter((p) => p.category.id === cat.id)
+          .filter((p) => p.category?.id === cat.id)
           .every((p) => p.available)
         return (
           <div key={cat.id} className="flex items-center gap-3">
@@ -478,7 +480,7 @@ export default function ProdutosPage() {
                     </p>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <span className="text-sm text-dark-300">{product.category.name}</span>
+                    <span className="text-sm text-dark-300">{product.category?.name ?? "--"}</span>
                   </TableCell>
                   <TableCell className="text-white font-medium">
                     {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(product.price)}

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { mpClient } from '@/lib/mercadopago';
+import { mpPayment } from '@/lib/mercadopago';
 
 const creditCardPaymentSchema = z.object({
   orderId: z.string().min(1, 'ID do pedido é obrigatório'),
@@ -38,15 +38,15 @@ export async function POST(request: Request) {
     }
 
     // Fetch product names since OrderItem has no product relation
-    const productIds = order.items.map((item) => item.productId);
+    const productIds = order.items.map((item: { productId: string }) => item.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
       select: { id: true, name: true },
     });
-    const productNameMap = new Map(products.map((p) => [p.id, p.name]));
+    const productNameMap = new Map(products.map((p: { id: string; name: string }) => [p.id, p.name]));
 
     // Build items for MercadoPago payment
-    const items = order.items.map((item) => ({
+    const items = order.items.map((item: { productId: string; price: unknown; quantity: number }) => ({
       id: item.productId,
       title: productNameMap.get(item.productId) || `Produto ${item.productId.slice(0, 8)}`,
       unit_price: Number(item.price),
@@ -56,21 +56,23 @@ export async function POST(request: Request) {
 
     // Capture payment with credit card using MercadoPago SDK
     // payment_method_id is omitted so MercadoPago detects it from the token
-    const payment = await mpClient.payment.create({
-      transaction_amount: Number(order.total),
-      token: cardToken,
-      description: `Pedido ${order.id}`,
-      installments: installments,
-      payer: {
-        email: order.customerPhone
-          ? `customer_${order.customerPhone.replace(/\D/g, '')}@placeholder.com`
-          : 'customer@placeholder.com',
-      },
-      additional_info: {
-        items: items,
-      },
-      metadata: {
-        orderId: order.id,
+    const payment = await mpPayment.create({
+      body: {
+        transaction_amount: Number(order.total),
+        token: cardToken,
+        description: `Pedido ${order.id}`,
+        installments,
+        payer: {
+          email: order.customerPhone
+            ? `customer_${order.customerPhone.replace(/\D/g, '')}@placeholder.com`
+            : 'customer@placeholder.com',
+        },
+        additional_info: {
+          items,
+        },
+        metadata: {
+          orderId: order.id,
+        },
       },
     });
 

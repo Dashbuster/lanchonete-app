@@ -51,7 +51,7 @@ type StatusStep = {
   status: OrderStatus
   label: string
   icon: React.ReactNode
-  color: string
+  color: "default" | "success" | "danger" | "warning" | "info"
 }
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -625,7 +625,7 @@ export default function PedidosPage() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 )
               })
             )}

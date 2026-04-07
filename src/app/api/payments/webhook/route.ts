@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { mpClient } from '@/lib/mercadopago';
+import { mpPayment } from '@/lib/mercadopago';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       const paymentId = data.id;
 
       // Fetch payment details from MercadoPago
-      const payment = await mpClient.payment.get(paymentId);
+      const payment = await mpPayment.get({ id: paymentId });
 
       const orderId =
         payment.metadata?.orderId || payment.external_reference;
