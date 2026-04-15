@@ -65,6 +65,7 @@ model Product {
   name        String    @unique
   description String?
   price       Decimal   @db.Decimal(10, 2)
+  costPrice   Decimal   @default(0) @map("cost_price") @db.Decimal(10, 2)
   image       String?
   available   Boolean   @default(true)
   prepTime    Int       @default(0) @map("prep_time")
@@ -123,6 +124,7 @@ model OrderItem {
   productId String
   quantity  Int
   price     Decimal @db.Decimal(10, 2)
+  costPrice Decimal @default(0) @map("cost_price") @db.Decimal(10, 2)
   addons    Json?
 
   @@map("order_items")
@@ -145,4 +147,18 @@ model AuditLog {
   user      User?    @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model WhatsAppLog {
+  id            String   @id @default(uuid())
+  phoneNumber   String
+  message       String
+  type          String   // ORDER_CONFIRMATION, STATUS_UPDATE, etc.
+  orderId       String?  // Relacionado ao pedido (opcional)
+  status        String   // SENT, FAILED, PENDING
+  errorMessage  String?
+  sentAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@map("whatsapp_logs")
 }

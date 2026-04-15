@@ -7,14 +7,23 @@ async function main() {
   console.log("Seeding database...")
 
   // Users
-  const adminPassword = await hash("admin123", 10)
+  const adminEmail = process.env.ADMIN_EMAIL?.trim() || "admin@lanchonete.com"
+  const adminPlainPassword = process.env.ADMIN_PASSWORD?.trim() || "admin123"
+  const managerEmail = "gerente@lanchonete.com"
+  const cashierEmail = "caixa@lanchonete.com"
+
+  const adminPassword = await hash(adminPlainPassword, 10)
   const managerPassword = await hash("gerente123", 10)
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@lanchonete.com" },
-    update: {},
+    where: { email: adminEmail },
+    update: {
+      password: adminPassword,
+      name: "Administrador",
+      role: "ADMIN",
+    },
     create: {
-      email: "admin@lanchonete.com",
+      email: adminEmail,
       password: adminPassword,
       name: "Administrador",
       role: "ADMIN",
@@ -22,10 +31,10 @@ async function main() {
   })
 
   const manager = await prisma.user.upsert({
-    where: { email: "gerente@lanchonete.com" },
+    where: { email: managerEmail },
     update: {},
     create: {
-      email: "gerente@lanchonete.com",
+      email: managerEmail,
       password: managerPassword,
       name: "Gerente",
       role: "MANAGER",
@@ -33,10 +42,10 @@ async function main() {
   })
 
   const cashier = await prisma.user.upsert({
-    where: { email: "caixa@lanchonete.com" },
+    where: { email: cashierEmail },
     update: {},
     create: {
-      email: "caixa@lanchonete.com",
+      email: cashierEmail,
       password: managerPassword,
       name: "Caixa",
       role: "CASHIER",
@@ -115,22 +124,60 @@ async function main() {
 
   console.log(`  ${products.length} products created`)
 
+  const createdProducts = await prisma.product.findMany({
+    where: {
+      name: {
+        in: [
+          "X-Burguer",
+          "X-Salada",
+          "X-Bacon",
+          "X-Frango",
+          "Smash Burger Duplo",
+          "Coca-Cola 350ml",
+          "Guarana Antarctica 350ml",
+          "Suco Natural 500ml",
+        ],
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+
+  const productByName = new Map(createdProducts.map((product) => [product.name, product.id]))
+
   // Addon Groups
+  await prisma.addon.deleteMany()
+  await prisma.addonGroup.deleteMany()
+
   const paoGroup = await prisma.addonGroup.create({
     data: {
       name: "Escolha o Pao",
       minSelect: 1,
       maxSelect: 1,
       required: true,
+      productId: productByName.get("X-Burguer"),
     },
   })
 
-  const adicionaisGroup = await prisma.addonGroup.create({
+  const burgerExtrasGroup = await prisma.addonGroup.create({
     data: {
-      name: "Adicionais",
+      name: "Adicionais do Burguer",
       minSelect: 0,
       maxSelect: 5,
       required: false,
+      productId: productByName.get("X-Bacon"),
+    },
+  })
+
+  const smashExtrasGroup = await prisma.addonGroup.create({
+    data: {
+      name: "Extras do Smash",
+      minSelect: 0,
+      maxSelect: 4,
+      required: false,
+      productId: productByName.get("Smash Burger Duplo"),
     },
   })
 
@@ -140,6 +187,7 @@ async function main() {
       minSelect: 1,
       maxSelect: 1,
       required: false,
+      productId: productByName.get("Suco Natural 500ml"),
     },
   })
 
@@ -152,10 +200,11 @@ async function main() {
   ]
 
   const adicionalAddons = [
-    { name: "Bacon Extra", price: 5.0, groupId: adicionaisGroup.id },
-    { name: "Queijo Extra", price: 4.0, groupId: adicionaisGroup.id },
-    { name: "Ovo Extra", price: 3.5, groupId: adicionaisGroup.id },
-    { name: "Hamburguer Extra", price: 8.0, groupId: adicionaisGroup.id },
+    { name: "Bacon Extra", price: 5.0, groupId: burgerExtrasGroup.id },
+    { name: "Queijo Extra", price: 4.0, groupId: burgerExtrasGroup.id },
+    { name: "Ovo Extra", price: 3.5, groupId: burgerExtrasGroup.id },
+    { name: "Hamburguer Extra", price: 8.0, groupId: smashExtrasGroup.id },
+    { name: "Molho Especial", price: 2.0, groupId: smashExtrasGroup.id },
   ]
 
   const bebidaAddons = [
@@ -168,19 +217,30 @@ async function main() {
     await prisma.addon.create({ data: addon })
   }
 
-  console.log(`  3 addon groups with 13 addons created`)
+  console.log(`  4 addon groups with ${[...paoAddons, ...adicionalAddons, ...bebidaAddons].length} addons created`)
 
   // Settings
   const settings = [
     { key: "store_name", value: "Lanchonete" },
     { key: "store_description", value: "Os melhores lanches artesanais da cidade!" },
+    { key: "store_logo", value: "" },
     { key: "delivery_fee", value: "5.00" },
     { key: "delivery_radius_km", value: "5" },
+    { key: "delivery_region_label", value: "Zona central" },
+    { key: "delivery_region_center", value: "Av. Central, 245 - Centro" },
+    { key: "delivery_region_notes", value: "Entregas em ate 45 minutos." },
+    { key: "delivery_neighborhoods", value: "Centro\nJardim America\nVila Nova" },
     { key: "min_order_value", value: "15.00" },
     { key: "accepts_pickup", value: "true" },
     { key: "whatsapp", value: "(11) 99999-9999" },
     { key: "instagram", value: "@lanchonete" },
     { key: "store_open", value: "true" },
+    { key: "whatsapp_robot_enabled", value: "false" },
+    { key: "whatsapp_provider", value: "SIMULATED" },
+    { key: "whatsapp_api_url", value: "" },
+    { key: "whatsapp_instance", value: "" },
+    { key: "whatsapp_token", value: "" },
+    { key: "whatsapp_test_phone", value: "" },
     { key: "payment_pix", value: "true" },
     { key: "payment_credit_card", value: "true" },
     { key: "payment_debit_card", value: "true" },
@@ -198,9 +258,9 @@ async function main() {
 
   console.log("  Settings created")
   console.log("\nSeed completed successfully!\n")
-  console.log("  Admin:     admin@lanchonete.com / admin123")
-  console.log("  Gerente:   gerente@lanchonete.com / gerente123")
-  console.log("  Caixa:     caixa@lanchonete.com / gerente123")
+  console.log(`  Admin:     ${admin.email} / ${adminPlainPassword}`)
+  console.log(`  Gerente:   ${manager.email} / gerente123`)
+  console.log(`  Caixa:     ${cashier.email} / gerente123`)
 }
 
 main()

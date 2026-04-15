@@ -1,23 +1,35 @@
 import type { Metadata } from "next"
+import type { CSSProperties, ReactNode } from "react"
 import "./globals.css"
 import { Providers } from "@/components/shared/Providers"
 
 export const metadata: Metadata = {
   title: {
-    default: "Lanchonete - Cardápio Digital",
-    template: "%s | Lanchonete",
+    default: "Big Night | Pedidos Online",
+    template: "%s | Big Night",
   },
-  description: "Faça seu pedido online - Lanchonete",
+  description:
+    "Site moderno para pedidos online de lanches, combos, bebidas e pagamentos da Big Night.",
 }
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <html lang="pt-BR" className="dark">
-      <body className="min-h-screen bg-dark-900 text-white antialiased">
+      <body
+        className="min-h-screen bg-dark-900 text-white antialiased"
+        style={
+          {
+            fontFamily:
+              '"Manrope", "Segoe UI", "Trebuchet MS", system-ui, sans-serif',
+            ["--font-heading" as string]:
+              '"Impact", "Arial Black", "Bebas Neue", sans-serif',
+          } as CSSProperties
+        }
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

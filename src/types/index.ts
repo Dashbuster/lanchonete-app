@@ -93,30 +93,21 @@ export interface OrderItem {
   productId: string;
   product?: Product;
   quantity: number;
-  unitPrice: number;
-  observations: string | null;
-  addons: Addon[];
-  createdAt: Date;
-  updatedAt: Date;
+  price: number;
+  addons: { id: string; name: string; price: number }[];
 }
 
 export interface Order {
   id: string;
-  number: number;
   status: OrderStatus;
-  customerName: string;
+  customerName: string | null;
   customerPhone: string | null;
-  customerAddress: string | null;
+  address: string | null;
   subtotal: number;
-  discount: number;
   deliveryFee: number;
   total: number;
   paymentMethod: PaymentMethod;
-  paid: boolean;
-  paymentId: string | null;
   changeFor: number | null;
-  notes: string | null;
   items: OrderItem[];
   createdAt: Date;
-  updatedAt: Date;
 }

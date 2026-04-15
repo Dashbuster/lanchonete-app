@@ -1,9 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
 import Image from "next/image"
+import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { X, Minus, Plus, ShoppingBag } from "lucide-react"
 import { useCart } from "@/hooks/useCart"
 import { Button } from "@/components/ui/Button"
 
@@ -13,209 +12,178 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ open, onClose }: CartDrawerProps) {
-  const { items, removeItem, updateQuantity, total, clearCart } = useCart()
   const router = useRouter()
+  const { items, clearCart, removeItem, total, updateQuantity } = useCart()
 
-  const deliveryFee = useMemo(() => 5.0, [])
   const subtotal = total()
+  const deliveryFee = items.length ? 6.9 : 0
   const finalTotal = subtotal + deliveryFee
 
-  const handleCheckout = () => {
-    if (items.length === 0) return
-    onClose()
-    router.push("/checkout")
+  if (!open) {
+    return null
   }
 
-  if (!open) return null
-
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 z-50 bg-black/50"
-        onClick={onClose}
-      />
-      {/* Drawer */}
-      <div
-        className="fixed inset-y-0 right-0 z-50 w-80 bg-dark-800 border-l border-dark-600 shadow-2xl flex flex-col animate-in slide-in-from-right"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-dark-600">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-brand-500" />
-            <h2 className="text-lg font-bold text-white">Carrinho</h2>
-            <span className="bg-brand-500/20 text-brand-500 text-xs font-semibold px-2 py-0.5 rounded-full">
-              {items.length}
-            </span>
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={onClose} />
+
+      <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-white/10 bg-dark-900 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+          <div>
+            <p className="text-xs uppercase tracking-[0.24em] text-brand-200">
+              Seu pedido
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-white">Carrinho</h2>
           </div>
+
           <div className="flex items-center gap-2">
-            <button
-              onClick={clearCart}
-              className="text-xs text-dark-400 hover:text-red-400 transition-colors"
-            >
-              Limpar
-            </button>
+            {items.length > 0 && (
+              <button
+                onClick={clearCart}
+                className="rounded-xl border border-white/10 p-2 text-dark-200 transition hover:text-white"
+                aria-label="Limpar carrinho"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-dark-300 hover:text-white hover:bg-dark-700 transition-colors"
+              className="rounded-xl border border-white/10 p-2 text-dark-200 transition hover:text-white"
+              aria-label="Fechar carrinho"
             >
-              <X className="w-5 h-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* Content */}
         {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-            <ShoppingBag className="w-16 h-16 text-dark-600 mb-4" />
-            <p className="text-dark-300 text-lg font-medium">
-              Seu carrinho está vazio
+          <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
+              <ShoppingBag className="h-9 w-9 text-brand-300" />
+            </div>
+            <h3 className="mt-6 text-2xl font-black text-white">Carrinho vazio</h3>
+            <p className="mt-3 text-sm leading-7 text-dark-200">
+              Adicione hambúrgueres, porções e bebidas para seguir para o checkout.
             </p>
-            <p className="text-dark-400 text-sm mt-2">
-              Adicione itens do cardápio para começar
-            </p>
-            <Button
-              onClick={onClose}
-              variant="secondary"
-              className="mt-6"
-            >
-              Ver Cardápio
+            <Button className="mt-6" onClick={onClose}>
+              Voltar ao cardápio
             </Button>
           </div>
         ) : (
           <>
-            {/* Items list */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
               {items.map((item) => {
                 const itemTotal =
                   (item.price +
-                    item.addons.reduce((s, a) => s + a.price, 0)) *
+                    item.addons.reduce((sum, addon) => sum + addon.price, 0)) *
                   item.quantity
 
                 return (
-                  <div
+                  <article
                     key={item.id}
-                    className="flex gap-3 p-3 bg-dark-700 rounded-lg"
+                    className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4"
                   >
-                    {/* Thumbnail */}
-                    <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-dark-800">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-xl">🍔</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="text-sm font-medium text-white truncate">
-                          {item.name}
-                        </h4>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="text-dark-400 hover:text-red-400 transition-colors flex-shrink-0"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                    <div className="flex gap-4">
+                      <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-white/[0.05]">
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-3xl">
+                            🍔
+                          </div>
+                        )}
                       </div>
 
-                      {item.addons.length > 0 && (
-                        <ul className="mt-1 space-y-0.5">
-                          {item.addons.map((addon, idx) => (
-                            <li
-                              key={idx}
-                              className="text-xs text-dark-400"
-                            >
-                              + {addon.name} - R$ {addon.price.toFixed(2).replace(".", ",")}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {item.observations && (
-                        <p className="mt-1 text-xs text-dark-400 italic truncate">
-                          {item.observations}
-                        </p>
-                      )}
-
-                      {/* Quantity + Price */}
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="truncate text-base font-bold text-white">
+                              {item.name}
+                            </h3>
+                            <p className="mt-1 text-sm font-semibold text-brand-200">
+                              R$ {itemTotal.toFixed(2).replace(".", ",")}
+                            </p>
+                          </div>
                           <button
-                            onClick={() =>
-                              updateQuantity(
-                                item.id,
-                                item.quantity - 1
-                              )
-                            }
-                            className="rounded-md bg-dark-600 p-1 text-dark-300 hover:text-white transition-colors"
+                            onClick={() => removeItem(item.id)}
+                            className="rounded-xl border border-white/10 p-2 text-dark-200 transition hover:text-red-300"
                           >
-                            <Minus className="w-3 h-3" />
+                            <X className="h-4 w-4" />
                           </button>
-                          <span className="text-sm font-medium text-white w-5 text-center">
+                        </div>
+
+                        {item.addons.length > 0 && (
+                          <p className="mt-2 text-xs leading-6 text-dark-200">
+                            {item.addons.map((addon) => addon.name).join(", ")}
+                          </p>
+                        )}
+
+                        {item.observations && (
+                          <p className="mt-2 text-xs leading-6 text-dark-300">
+                            {item.observations}
+                          </p>
+                        )}
+
+                        <div className="mt-4 flex items-center gap-3">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="w-6 text-center text-sm font-bold text-white">
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() =>
-                              updateQuantity(
-                                item.id,
-                                item.quantity + 1
-                              )
-                            }
-                            className="rounded-md bg-dark-600 p-1 text-dark-300 hover:text-white transition-colors"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="h-4 w-4" />
                           </button>
                         </div>
-                        <span className="text-sm font-bold text-brand-500">
-                          R$ {itemTotal.toFixed(2).replace(".", ",")}
-                        </span>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 )
               })}
             </div>
 
-            {/* Footer */}
-            <div className="border-t border-dark-600 px-4 py-4 space-y-3">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-dark-300">Subtotal</span>
-                  <span className="text-white font-medium">
-                    R$ {subtotal.toFixed(2).replace(".", ",")}
-                  </span>
+            <div className="border-t border-white/10 bg-black/20 px-5 py-5">
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between text-dark-200">
+                  <span>Subtotal</span>
+                  <span>R$ {subtotal.toFixed(2).replace(".", ",")}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-dark-300">Taxa de entrega</span>
-                  <span className="text-white font-medium">
-                    R$ {deliveryFee.toFixed(2).replace(".", ",")}
-                  </span>
+                <div className="flex items-center justify-between text-dark-200">
+                  <span>Entrega estimada</span>
+                  <span>R$ {deliveryFee.toFixed(2).replace(".", ",")}</span>
                 </div>
-                <div className="flex justify-between text-base pt-2 border-t border-dark-600">
-                  <span className="font-semibold text-white">Total</span>
-                  <span className="text-xl font-bold text-brand-500">
-                    R$ {finalTotal.toFixed(2).replace(".", ",")}
-                  </span>
+                <div className="flex items-center justify-between border-t border-white/10 pt-3 text-base font-bold text-white">
+                  <span>Total</span>
+                  <span>R$ {finalTotal.toFixed(2).replace(".", ",")}</span>
                 </div>
               </div>
 
-              <Button className="w-full" size="lg" onClick={handleCheckout}>
-                Finalizar Pedido
+              <Button
+                className="mt-5 w-full"
+                size="lg"
+                onClick={() => {
+                  onClose()
+                  router.push("/checkout")
+                }}
+              >
+                Ir para o checkout
               </Button>
             </div>
           </>
         )}
-      </div>
-    </>
+      </aside>
+    </div>
   )
 }

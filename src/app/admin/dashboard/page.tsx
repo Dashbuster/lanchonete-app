@@ -1,278 +1,359 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { Badge } from "@/components/ui/Badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table"
-import { cn } from "@/utils/cn"
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import {
-  DollarSign,
-  ShoppingCart,
+  ArrowRight,
+  CircleDollarSign,
+  FolderKanban,
+  Package2,
+  ShoppingBag,
+  Tags,
   TrendingUp,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
+  Users,
 } from "lucide-react"
 
-// ─── Types ──────────────────────────────────────────────────────────
+interface Product {
+  id: string
+  available: boolean
+}
 
-interface StatCardProps {
-  title: string
-  value: string
-  icon: React.ReactNode
-  trend?: { value: string; up: boolean }
+interface Category {
+  id: string
+  active: boolean
 }
 
 interface Order {
   id: string
-  number: number
-  customerName: string
   status: string
-  total: number
-  createdAt: string
 }
 
-interface DashboardData {
-  stats: {
-    totalOrders: number
+interface SalesReport {
+  totalRevenue: number
+  totalOrders: number
+  totalClients: number
+  totalProfit: number
+  avgTicket: number
+  dailySales: { date: string; revenue: number; profit: number; orders: number }[]
+  topProducts: {
+    name: string
+    quantity: number
     revenue: number
-    avgTicket: number
-    pendingOrders: number
-  }
-  statsTrend: {
-    totalOrders: { value: string; up: boolean }
-    revenue: { value: string; up: boolean }
-    avgTicket: { value: string; up: boolean }
-    pendingOrders: { value: string; up: boolean }
-  }
-  recentOrders: Order[]
+    profit: number
+    image: string | null
+  }[]
+  paymentBreakdown: {
+    method: string
+    count: number
+    revenue: number
+    percentage: number
+  }[]
 }
 
-// ─── Mock Data ──────────────────────────────────────────────────────
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+})
 
-const mockDashboardData: DashboardData = {
-  stats: {
-    totalOrders: 1248,
-    revenue: 28750.5,
-    avgTicket: 23.04,
-    pendingOrders: 12,
-  },
-  statsTrend: {
-    totalOrders: { value: "12%", up: true },
-    revenue: { value: "8.2%", up: true },
-    avgTicket: { value: "3.1%", up: false },
-    pendingOrders: { value: "2", up: false },
-  },
-  recentOrders: [
-    { id: "1", number: 1042, customerName: "Joao Silva", status: "PENDING", total: 45.9, createdAt: "2026-04-06T10:30:00Z" },
-    { id: "2", number: 1041, customerName: "Maria Santos", status: "PREPARING", total: 32.5, createdAt: "2026-04-06T10:15:00Z" },
-    { id: "3", number: 1040, customerName: "Carlos Oliveira", status: "READY", total: 67.8, createdAt: "2026-04-06T10:00:00Z" },
-    { id: "4", number: 1039, customerName: "Ana Pereira", status: "DELIVERED", total: 28.9, createdAt: "2026-04-06T09:45:00Z" },
-    { id: "5", number: 1038, customerName: "Pedro Costa", status: "CONFIRMED", total: 55.0, createdAt: "2026-04-06T09:30:00Z" },
-    { id: "6", number: 1037, customerName: "Lucia Ferreira", status: "DELIVERED", total: 41.2, createdAt: "2026-04-06T09:15:00Z" },
-    { id: "7", number: 1036, customerName: "Roberto Lima", status: "CANCELLED", total: 19.9, createdAt: "2026-04-06T09:00:00Z" },
-    { id: "8", number: 1035, customerName: "Fernanda Souza", status: "DELIVERED", total: 73.5, createdAt: "2026-04-06T08:45:00Z" },
-    { id: "9", number: 1034, customerName: "Marcos Almeida", status: "DELIVERED", total: 36.7, createdAt: "2026-04-06T08:30:00Z" },
-    { id: "10", number: 1033, customerName: "Patricia Rocha", status: "DELIVERED", total: 52.4, createdAt: "2026-04-06T08:15:00Z" },
-  ],
+const numberFormatter = new Intl.NumberFormat("pt-BR")
+
+function getMonthRange() {
+  const today = new Date()
+  const start = new Date(today.getFullYear(), today.getMonth(), 1)
+
+  return {
+    from: start.toISOString().slice(0, 10),
+    to: today.toISOString().slice(0, 10),
+  }
 }
 
-// ─── Components ─────────────────────────────────────────────────────
+export default function DashboardPage() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [report, setReport] = useState<SalesReport | null>(null)
+  const [loading, setLoading] = useState(true)
 
-function StatCard({ title, value, icon, trend }: StatCardProps) {
+  useEffect(() => {
+    async function loadData() {
+      const { from, to } = getMonthRange()
+
+      try {
+        const [productsResponse, categoriesResponse, ordersResponse, reportResponse] =
+          await Promise.all([
+            fetch("/api/products"),
+            fetch("/api/categories"),
+            fetch("/api/orders"),
+            fetch(`/api/reports/sales?from=${from}&to=${to}`),
+          ])
+
+        if (productsResponse.ok) {
+          setProducts(await productsResponse.json())
+        }
+
+        if (categoriesResponse.ok) {
+          setCategories(await categoriesResponse.json())
+        }
+
+        if (ordersResponse.ok) {
+          setOrders(await ordersResponse.json())
+        }
+
+        if (reportResponse.ok) {
+          setReport(await reportResponse.json())
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  const executiveStats = useMemo(() => {
+    if (!report) {
+      return []
+    }
+
+    return [
+      {
+        label: "Faturamento do mes",
+        value: currencyFormatter.format(report.totalRevenue),
+        helper: `${numberFormatter.format(report.totalOrders)} pedidos no periodo`,
+        icon: CircleDollarSign,
+      },
+      {
+        label: "Lucro estimado",
+        value: currencyFormatter.format(report.totalProfit),
+        helper: "Com base no custo dos itens vendidos",
+        icon: TrendingUp,
+      },
+      {
+        label: "Ticket medio",
+        value: currencyFormatter.format(report.avgTicket),
+        helper: "Valor medio por pedido valido",
+        icon: Package2,
+      },
+      {
+        label: "Clientes atendidos",
+        value: numberFormatter.format(report.totalClients),
+        helper: "Clientes unicos no periodo",
+        icon: Users,
+      },
+    ]
+  }, [report])
+
+  const operationsStats = useMemo(() => {
+    const availableProducts = products.filter((product) => product.available).length
+    const activeCategories = categories.filter((category) => category.active).length
+    const pendingOrders = orders.filter((order) =>
+      ["PENDING", "CONFIRMED", "PREPARING", "READY"].includes(order.status)
+    ).length
+
+    return [
+      {
+        label: "Produtos ativos",
+        value: numberFormatter.format(availableProducts),
+        helper: `${numberFormatter.format(products.length)} cadastrados`,
+        icon: FolderKanban,
+      },
+      {
+        label: "Categorias ativas",
+        value: numberFormatter.format(activeCategories),
+        helper: `${numberFormatter.format(categories.length)} categorias no total`,
+        icon: Tags,
+      },
+      {
+        label: "Pedidos em andamento",
+        value: numberFormatter.format(pendingOrders),
+        helper: "Precisam de acompanhamento operacional",
+        icon: ShoppingBag,
+      },
+    ]
+  }, [categories, orders, products])
+
+  const bestDay = useMemo(() => {
+    if (!report?.dailySales.length) {
+      return null
+    }
+
+    return [...report.dailySales].sort((left, right) => right.revenue - left.revenue)[0]
+  }, [report])
+
+  const topPaymentMethod = useMemo(() => {
+    if (!report?.paymentBreakdown.length) {
+      return null
+    }
+
+    return [...report.paymentBreakdown].sort((left, right) => right.revenue - left.revenue)[0]
+  }, [report])
+
+  const topProduct = report?.topProducts[0] ?? null
+
   return (
-    <div className="rounded-xl border border-dark-600 bg-dark-800 p-6 transition-colors hover:border-dark-500">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-dark-300">{title}</p>
-          <p className="mt-2 text-2xl font-bold text-white">{value}</p>
-          {trend && (
-            <div className="mt-2 flex items-center gap-1 text-xs">
-              {trend.up ? (
-                <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-              ) : (
-                <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
-              )}
-              <span className={cn(trend.up ? "text-emerald-400" : "text-red-400")}>
-                {trend.value} vs ontem
-              </span>
+    <div className="space-y-6">
+      <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(135deg,rgba(249,115,22,0.18),rgba(12,14,14,0.98)_55%)] p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-200">
+          Painel do proprietario
+        </p>
+        <h1 className="mt-3 text-4xl font-black text-white">
+          Acompanhe vendas, lucro e operacao da lanchonete
+        </h1>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-dark-100">
+          Aqui fica a leitura rapida do negocio: quanto entrou no mes, quanto sobrou,
+          quantos clientes compraram e o que ainda exige acao no dia a dia.
+        </p>
+
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/admin/relatorios"
+            className="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)]"
+          >
+            Ver relatorio financeiro
+          </Link>
+          <Link
+            href="/admin/pedidos"
+            className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-5 py-3 text-sm font-bold text-white"
+          >
+            Acompanhar pedidos
+          </Link>
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {loading && executiveStats.length === 0
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5"
+              >
+                <div className="h-11 w-11 animate-pulse rounded-2xl bg-white/10" />
+                <div className="mt-4 h-4 w-28 animate-pulse rounded bg-white/10" />
+                <div className="mt-3 h-10 w-36 animate-pulse rounded bg-white/10" />
+                <div className="mt-3 h-3 w-40 animate-pulse rounded bg-white/10" />
+              </div>
+            ))
+          : executiveStats.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500/15">
+                  <item.icon className="h-5 w-5 text-brand-300" />
+                </div>
+                <p className="mt-4 text-sm text-dark-200">{item.label}</p>
+                <p className="mt-2 text-3xl font-black text-white">{item.value}</p>
+                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-dark-300">
+                  {item.helper}
+                </p>
+              </div>
+            ))}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-200">
+                Resumo do mes
+              </p>
+              <h2 className="mt-2 text-2xl font-black text-white">
+                Leitura financeira para decidir rapido
+              </h2>
+            </div>
+            <Link
+              href="/admin/relatorios"
+              className="inline-flex items-center gap-2 text-sm font-bold text-brand-300"
+            >
+              Abrir detalhamento
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {report ? (
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-dark-300">
+                  Melhor dia em vendas
+                </p>
+                <p className="mt-3 text-lg font-black text-white">
+                  {bestDay
+                    ? new Date(`${bestDay.date}T12:00:00`).toLocaleDateString("pt-BR")
+                    : "Sem dados"}
+                </p>
+                <p className="mt-2 text-sm text-emerald-300">
+                  {bestDay ? currencyFormatter.format(bestDay.revenue) : "-"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-dark-300">
+                  Forma de pagamento lider
+                </p>
+                <p className="mt-3 text-lg font-black text-white">
+                  {topPaymentMethod ? topPaymentMethod.method : "Sem dados"}
+                </p>
+                <p className="mt-2 text-sm text-dark-200">
+                  {topPaymentMethod
+                    ? `${topPaymentMethod.percentage.toFixed(1)}% do faturamento`
+                    : "-"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-dark-300">
+                  Produto destaque
+                </p>
+                <p className="mt-3 text-lg font-black text-white">
+                  {topProduct ? topProduct.name : "Sem dados"}
+                </p>
+                <p className="mt-2 text-sm text-dark-200">
+                  {topProduct
+                    ? `${numberFormatter.format(topProduct.quantity)} unidades vendidas`
+                    : "-"}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-dark-200">
+              Os indicadores financeiros ainda nao foram carregados.
             </div>
           )}
         </div>
-        <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-dark-500">
-          {icon}
-        </div>
-      </div>
-    </div>
-  )
-}
 
-function getStatusVariant(status: string): "warning" | "info" | "success" | "danger" | "default" {
-  const map: Record<string, "warning" | "info" | "success" | "danger" | "default"> = {
-    PENDING: "warning",
-    CONFIRMED: "info",
-    PREPARING: "warning",
-    READY: "default",
-    DELIVERED: "success",
-    CANCELLED: "danger",
-  }
-  return map[status] || "default"
-}
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-200">
+            Operacao
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-white">
+            Itens que pedem acompanhamento
+          </h2>
 
-function getStatusLabel(status: string): string {
-  const map: Record<string, string> = {
-    PENDING: "Pendente",
-    CONFIRMED: "Confirmado",
-    PREPARING: "Em Preparo",
-    READY: "Pronto",
-    DELIVERED: "Entregue",
-    CANCELLED: "Cancelado",
-  }
-  return map[status] || status
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-}
-
-// ─── Skeleton ───────────────────────────────────────────────────────
-
-function DashboardSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-dark-600 bg-dark-800 p-6 animate-pulse">
-            <div className="flex items-start justify-between">
-              <div className="space-y-3">
-                <div className="h-4 w-20 rounded bg-dark-600" />
-                <div className="h-7 w-28 rounded bg-dark-600" />
-                <div className="h-3 w-24 rounded bg-dark-600" />
+          <div className="mt-6 space-y-4">
+            {operationsStats.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-white/10 bg-black/20 p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-dark-200">{item.label}</p>
+                    <p className="mt-2 text-3xl font-black text-white">{item.value}</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-dark-300">
+                      {item.helper}
+                    </p>
+                  </div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.06]">
+                    <item.icon className="h-5 w-5 text-white" />
+                  </div>
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-xl bg-dark-600" />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="rounded-xl border border-dark-600 bg-dark-800 p-6 animate-pulse">
-        <div className="h-6 w-40 rounded bg-dark-600 mb-4" />
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="mt-4 h-10 rounded bg-dark-600" />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Page ───────────────────────────────────────────────────────────
-
-export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch("/api/dashboard")
-      if (res.ok) {
-        const json = await res.json()
-        setData(json)
-      } else {
-        setData(mockDashboardData)
-      }
-    } catch {
-      setData(mockDashboardData)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  if (loading) {
-    return <DashboardSkeleton />
-  }
-
-  const stats = data?.stats ?? mockDashboardData.stats
-  const trend = data?.statsTrend ?? mockDashboardData.statsTrend
-  const orders = data?.recentOrders ?? mockDashboardData.recentOrders
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-sm text-dark-300 mt-1">Visao geral da sua lanchonete</p>
-      </div>
-
-      {/* Stat Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Pedidos"
-          value={stats.totalOrders.toLocaleString("pt-BR")}
-          icon={<ShoppingCart className="w-6 h-6 text-brand-500" />}
-          trend={trend.totalOrders}
-        />
-        <StatCard
-          title="Receita"
-          value={formatCurrency(stats.revenue)}
-          icon={<DollarSign className="w-6 h-6 text-emerald-500" />}
-          trend={trend.revenue}
-        />
-        <StatCard
-          title="Ticket Medio"
-          value={formatCurrency(stats.avgTicket)}
-          icon={<TrendingUp className="w-6 h-6 text-blue-500" />}
-          trend={trend.avgTicket}
-        />
-        <StatCard
-          title="Pedidos Pendentes"
-          value={stats.pendingOrders.toString()}
-          icon={<Clock className="w-6 h-6 text-yellow-500" />}
-          trend={trend.pendingOrders}
-        />
-      </div>
-
-      {/* Recent Orders Table */}
-      <div className="rounded-xl border border-dark-600 bg-dark-800">
-        <div className="px-6 py-4 border-b border-dark-600">
-          <h2 className="text-lg font-semibold text-white">Pedidos Recentes</h2>
-          <p className="text-sm text-dark-300 mt-0.5">Ultimos 10 pedidos</p>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Pedido</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Hora</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium text-white">#{order.number}</TableCell>
-                <TableCell>{order.customerName}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusVariant(order.status)}>
-                    {getStatusLabel(order.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-white font-medium">
-                  {formatCurrency(order.total)}
-                </TableCell>
-                <TableCell className="text-dark-300">{formatDate(order.createdAt)}</TableCell>
-              </TableRow>
             ))}
-          </TableBody>
-        </Table>
-      </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

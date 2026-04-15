@@ -1,414 +1,473 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { Card } from "@/components/ui/Card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table"
-import { Badge } from "@/components/ui/Badge"
-import { Button } from "@/components/ui/Button"
-import { DollarSign, ShoppingCart, TrendingUp, Calendar, Download } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts"
+  ArrowDownRight,
+  ArrowUpRight,
+  CalendarDays,
+  DollarSign,
+  Package2,
+  ShoppingBag,
+  TrendingUp,
+  Users,
+  Wallet,
+  XCircle,
+} from "lucide-react"
 
-// ─── Types ──────────────────────────────────────────────────────────
+interface ComparisonMetric {
+  current: number
+  previous: number
+  diff: number
+  percent: number
+}
 
 interface ReportData {
+  period: {
+    from: string
+    to: string
+  }
+  previousPeriod: {
+    from: string
+    to: string
+  }
   totalRevenue: number
   totalOrders: number
+  totalClients: number
+  totalProfit: number
   avgTicket: number
-  dailySales: { date: string; revenue: number; orders: number }[]
-  topProducts: { name: string; quantity: number; revenue: number; image: string | null }[]
-  paymentBreakdown: { method: string; count: number; revenue: number; percentage: number }[]
+  profitMargin: number
+  cancellationRate: number
+  deliveredOrders: number
+  cancelledOrders: number
+  activeOrders: number
+  deliveredRevenue: number
+  cancelledRevenue: number
+  deliveryRevenue: number
+  comparisons: {
+    revenue: ComparisonMetric
+    profit: ComparisonMetric
+    orders: ComparisonMetric
+    avgTicket: ComparisonMetric
+  }
+  dailySales: { date: string; revenue: number; profit: number; orders: number }[]
+  topProducts: {
+    name: string
+    quantity: number
+    revenue: number
+    profit: number
+    image: string | null
+  }[]
+  paymentBreakdown: {
+    method: string
+    count: number
+    revenue: number
+    percentage: number
+  }[]
 }
 
-// ─── Mock Data ──────────────────────────────────────────────────────
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+})
 
-const mockReportData: ReportData = {
-  totalRevenue: 28750.50,
-  totalOrders: 1248,
-  avgTicket: 23.04,
-  dailySales: [
-    { date: "2026-03-31", revenue: 3200.0, orders: 135 },
-    { date: "2026-04-01", revenue: 4100.0, orders: 178 },
-    { date: "2026-04-02", revenue: 3800.0, orders: 162 },
-    { date: "2026-04-03", revenue: 5200.0, orders: 220 },
-    { date: "2026-04-04", revenue: 4800.0, orders: 205 },
-    { date: "2026-04-05", revenue: 5100.5, orders: 218 },
-    { date: "2026-04-06", revenue: 2550.0, orders: 130 },
-  ],
-  topProducts: [
-    { name: "X-Bacon", quantity: 245, revenue: 4630.5, image: null },
-    { name: "X-Salada", quantity: 198, revenue: 3069.0, image: null },
-    { name: "X-Tudo", quantity: 175, revenue: 4200.0, image: null },
-    { name: "Coca-Cola 350ml", quantity: 320, revenue: 1920.0, image: null },
-    { name: "Batata Frita P", quantity: 210, revenue: 2730.0, image: null },
-    { name: "Batata Frita G", quantity: 95, revenue: 1710.0, image: null },
-    { name: "Acai 300ml", quantity: 88, revenue: 1936.0, image: null },
-    { name: "Milk Shake", quantity: 120, revenue: 1536.0, image: null },
-    { name: "Cachorro Quente", quantity: 75, revenue: 1117.5, image: null },
-    { name: "Pastel de Carne", quantity: 65, revenue: 516.75, image: null },
-  ],
-  paymentBreakdown: [
-    { method: "PIX", count: 520, revenue: 14800.0, percentage: 51.5 },
-    { method: "Cartao de Credito", count: 310, revenue: 7500.0, percentage: 24.8 },
-    { method: "Cartao de Debito", count: 180, revenue: 3800.0, percentage: 13.6 },
-    { method: "Dinheiro", count: 238, revenue: 2650.5, percentage: 10.1 },
-  ],
+const numberFormatter = new Intl.NumberFormat("pt-BR")
+
+function formatDateLabel(value: string) {
+  return new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR")
 }
 
-// ─── Chart Colors ───────────────────────────────────────────────────
+function formatPercent(value: number) {
+  return `${value.toFixed(1)}%`
+}
 
-const BAR_COLOR = "#F97316"
-const PIE_COLORS = ["#F97316", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"]
+function getDateDaysAgo(days: number) {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  return date.toISOString().slice(0, 10)
+}
 
-// ─── Custom Tooltip for Bar Chart ───────────────────────────────────
+const PRESETS = [
+  { key: "7d", label: "Ultimos 7 dias", from: () => getDateDaysAgo(6), to: () => new Date().toISOString().slice(0, 10) },
+  { key: "15d", label: "15 dias", from: () => getDateDaysAgo(14), to: () => new Date().toISOString().slice(0, 10) },
+  { key: "30d", label: "30 dias", from: () => getDateDaysAgo(29), to: () => new Date().toISOString().slice(0, 10) },
+  {
+    key: "month",
+    label: "Mes atual",
+    from: () => {
+      const date = new Date()
+      date.setDate(1)
+      return date.toISOString().slice(0, 10)
+    },
+    to: () => new Date().toISOString().slice(0, 10),
+  },
+]
 
-function CustomBarTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; revenue: number; orders: number } }> }) {
-  if (!active || !payload || payload.length === 0) return null
-  const data = payload[0]?.payload
-  if (!data) return null
+function ComparisonBadge({ metric }: { metric: ComparisonMetric }) {
+  const positive = metric.diff >= 0
+  const Icon = positive ? ArrowUpRight : ArrowDownRight
+
   return (
-    <div className="rounded-lg border border-dark-600 bg-dark-700 p-3 shadow-lg">
-      <p className="text-sm font-medium text-white">
-        {new Date(data.date + "T00:00:00").toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "short",
-        })}
-      </p>
-      <p className="text-sm text-brand-500">
-        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.revenue)}
-      </p>
-      <p className="text-xs text-dark-300">{data.orders} pedidos</p>
-    </div>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
+        positive
+          ? "bg-emerald-500/15 text-emerald-300"
+          : "bg-rose-500/15 text-rose-300"
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {formatPercent(Math.abs(metric.percent))}
+    </span>
   )
 }
-
-// ─── Custom Tooltip for Pie Chart ───────────────────────────────────
-
-function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { method: string; revenue: number } }> }) {
-  if (!active || !payload || payload.length === 0) return null
-  const data = payload[0]?.payload
-  if (!data) return null
-  return (
-    <div className="rounded-lg border border-dark-600 bg-dark-700 p-3 shadow-lg">
-      <p className="text-sm font-medium text-white">{data.method}</p>
-      <p className="text-sm text-brand-500">
-        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.revenue)}
-      </p>
-    </div>
-  )
-}
-
-// ─── Skeleton ───────────────────────────────────────────────────────
-
-function ReportsSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="flex gap-4 animate-pulse">
-        <div className="h-10 w-40 rounded bg-dark-600" />
-        <div className="h-10 w-40 rounded bg-dark-600" />
-        <div className="h-10 w-32 rounded bg-dark-600" />
-      </div>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-28 rounded-xl bg-dark-600 animate-pulse" />
-        ))}
-      </div>
-      <div className="h-80 rounded-xl bg-dark-600 animate-pulse" />
-      <div className="h-80 rounded-xl bg-dark-600 animate-pulse" />
-    </div>
-  )
-}
-
-// ─── Page ───────────────────────────────────────────────────────────
 
 export default function RelatoriosPage() {
-  const [reportData, setReportData] = useState<ReportData | null>(null)
+  const [report, setReport] = useState<ReportData | null>(null)
+  const [dateFrom, setDateFrom] = useState(() => getDateDaysAgo(6))
+  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10))
   const [loading, setLoading] = useState(true)
-  const [dateFrom, setDateFrom] = useState("2026-03-31")
-  const [dateTo, setDateTo] = useState("2026-04-06")
-
-  const fetchReport = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(
-        `/api/reports?from=${dateFrom}&to=${dateTo}`
-      )
-      if (res.ok) {
-        const json = await res.json()
-        setReportData(json)
-      } else {
-        setReportData(mockReportData)
-      }
-    } catch {
-      setReportData(mockReportData)
-    } finally {
-      setLoading(false)
-    }
-  }, [dateFrom, dateTo])
 
   useEffect(() => {
-    fetchReport()
-  }, [fetchReport])
+    async function loadReport() {
+      setLoading(true)
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
+      try {
+        const response = await fetch(`/api/reports/sales?from=${dateFrom}&to=${dateTo}`)
 
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat("pt-BR").format(value)
+        if (response.ok) {
+          setReport(await response.json())
+        }
+      } catch (error) {
+        console.error("Erro ao carregar relatorio:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  if (loading || !reportData) {
-    return <ReportsSkeleton />
+    loadReport()
+  }, [dateFrom, dateTo])
+
+  const summary = useMemo(() => {
+    if (!report) {
+      return []
+    }
+
+    return [
+      {
+        label: "Faturamento",
+        value: currencyFormatter.format(report.totalRevenue),
+        helper: `Periodo anterior: ${currencyFormatter.format(report.comparisons.revenue.previous)}`,
+        icon: DollarSign,
+        comparison: report.comparisons.revenue,
+      },
+      {
+        label: "Lucro estimado",
+        value: currencyFormatter.format(report.totalProfit),
+        helper: `Margem atual: ${formatPercent(report.profitMargin)}`,
+        icon: TrendingUp,
+        comparison: report.comparisons.profit,
+      },
+      {
+        label: "Pedidos validos",
+        value: numberFormatter.format(report.totalOrders),
+        helper: `${numberFormatter.format(report.cancelledOrders)} cancelados no periodo`,
+        icon: ShoppingBag,
+        comparison: report.comparisons.orders,
+      },
+      {
+        label: "Ticket medio",
+        value: currencyFormatter.format(report.avgTicket),
+        helper: `Periodo anterior: ${currencyFormatter.format(report.comparisons.avgTicket.previous)}`,
+        icon: Users,
+        comparison: report.comparisons.avgTicket,
+      },
+    ]
+  }, [report])
+
+  const maxDailyRevenue = useMemo(() => {
+    if (!report?.dailySales.length) {
+      return 0
+    }
+
+    return Math.max(...report.dailySales.map((day) => day.revenue))
+  }, [report])
+
+  if (loading && !report) {
+    return (
+      <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-8 text-white">
+        Carregando relatorio financeiro...
+      </div>
+    )
   }
-
-  // Prepare bar chart data with formatted date
-  const barChartData = reportData.dailySales.map((d) => ({
-    ...d,
-    dateLabel: new Date(d.date + "T00:00:00").toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "short",
-    }),
-  }))
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Relatorios</h1>
-          <p className="text-sm text-dark-300 mt-1">Analise e relatorios de vendas</p>
-        </div>
-        <Button variant="secondary" size="md" className="gap-2">
-          <Download className="w-4 h-4" />
-          Exportar PDF
-        </Button>
-      </div>
+      <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-200">
+          Financeiro gerencial
+        </p>
+        <h1 className="mt-2 text-4xl font-black text-white">
+          Visao financeira para acompanhar a saude da lanchonete
+        </h1>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-dark-100">
+          Compare o desempenho do periodo atual com o anterior, acompanhe margem,
+          ticket medio, cancelamentos e entenda o que esta puxando o caixa.
+        </p>
 
-      {/* Date Range Picker */}
-      <Card className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-dark-400" />
-          <span className="text-sm text-dark-300">Periodo:</span>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div>
-            <label htmlFor="date-from" className="block text-xs text-dark-400 mb-1">De</label>
-            <input
-              id="date-from"
-              type="date"
-              value={dateFrom}
-              onChange={(e) => {
-                setDateFrom(e.target.value)
-              }}
-              className="px-3 py-2 rounded-lg bg-dark-700 border border-dark-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
+        <div className="mt-6 rounded-[28px] border border-white/10 bg-black/20 p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-dark-200">
+            <CalendarDays className="h-4 w-4 text-brand-300" />
+            Periodo do relatorio
           </div>
-          <span className="text-dark-400 mt-4">ate</span>
-          <div>
-            <label htmlFor="date-to" className="block text-xs text-dark-400 mb-1">Ate</label>
-            <input
-              id="date-to"
-              type="date"
-              value={dateTo}
-              onChange={(e) => {
-                setDateTo(e.target.value)
-              }}
-              className="px-3 py-2 rounded-lg bg-dark-700 border border-dark-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-          </div>
-          <div className="mt-5">
-            <button
-              onClick={fetchReport}
-              className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
-            >
-              Filtrar
-            </button>
-          </div>
-        </div>
-      </Card>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        <div className="rounded-xl border border-dark-600 bg-dark-800 p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-dark-300">Receita Total</p>
-              <p className="mt-2 text-2xl font-bold text-white">{formatCurrency(reportData.totalRevenue)}</p>
-              <div className="mt-2 flex items-center gap-1 text-xs text-emerald-400">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Receita no periodo</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-dark-500">
-              <DollarSign className="w-6 h-6 text-emerald-500" />
-            </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {PRESETS.map((preset) => {
+              const isActive = dateFrom === preset.from() && dateTo === preset.to()
+              return (
+                <button
+                  key={preset.key}
+                  type="button"
+                  onClick={() => {
+                    setDateFrom(preset.from())
+                    setDateTo(preset.to())
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    isActive
+                      ? "bg-brand-500 text-white"
+                      : "border border-white/10 bg-white/[0.04] text-dark-100 hover:bg-white/[0.08]"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              )
+            })}
           </div>
-        </div>
 
-        <div className="rounded-xl border border-dark-600 bg-dark-800 p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-dark-300">Total de Pedidos</p>
-              <p className="mt-2 text-2xl font-bold text-white">{formatNumber(reportData.totalOrders)}</p>
-              <div className="mt-2 flex items-center gap-1 text-xs text-blue-400">
-                <ShoppingCart className="w-3.5 h-3.5" />
-                <span>Pedidos no periodo</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-dark-500">
-              <ShoppingCart className="w-6 h-6 text-blue-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-dark-600 bg-dark-800 p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-dark-300">Ticket Medio</p>
-              <p className="mt-2 text-2xl font-bold text-white">{formatCurrency(reportData.avgTicket)}</p>
-              <div className="mt-2 flex items-center gap-1 text-xs text-brand-500">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Venda media por pedido</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-dark-500">
-              <TrendingUp className="w-6 h-6 text-brand-500" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Daily Sales Bar Chart */}
-      <div className="rounded-xl border border-dark-600 bg-dark-800 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Vendas Diarias</h2>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={barChartData}>
-              <XAxis
-                dataKey="dateLabel"
-                tick={{ fill: "#7C888A", fontSize: 12 }}
-                axisLine={{ stroke: "#252B2D" }}
-                tickLine={{ stroke: "#252B2D" }}
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <label className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+              <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-dark-300">
+                Data inicial
+              </span>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(event) => setDateFrom(event.target.value)}
+                className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
               />
-              <YAxis
-                tick={{ fill: "#7C888A", fontSize: 12 }}
-                axisLine={{ stroke: "#252B2D" }}
-                tickLine={{ stroke: "#252B2D" }}
-                tickFormatter={(value: number) =>
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(value)
-                }
-              />
-              <Tooltip content={<CustomBarTooltip />} />
-              <Bar dataKey="revenue" fill={BAR_COLOR} radius={[6, 6, 0, 0]} maxBarSize={60} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+            </label>
 
-      {/* Row: Top Products + Payment Breakdown */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Most Sold Products */}
-        <div className="rounded-xl border border-dark-600 bg-dark-800 p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Produtos Mais Vendidos</h2>
-          <div className="overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Produto</TableHead>
-                  <TableHead className="text-right">Qtd</TableHead>
-                  <TableHead className="text-right">Receita</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reportData.topProducts.map((product, idx) => (
-                  <TableRow key={product.name}>
-                    <TableCell>
-                      <Badge variant={idx === 0 ? "warning" : idx === 1 ? "info" : "default"}>
-                        {idx + 1}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-white font-medium">{product.name}</TableCell>
-                    <TableCell className="text-right text-white">{product.quantity}</TableCell>
-                    <TableCell className="text-right text-white">
-                      {formatCurrency(product.revenue)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <label className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+              <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-dark-300">
+                Data final
+              </span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(event) => setDateTo(event.target.value)}
+                className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+              />
+            </label>
           </div>
         </div>
 
-        {/* Payment Method Breakdown */}
-        <div className="rounded-xl border border-dark-600 bg-dark-800 p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Formas de Pagamento</h2>
-          <div className="flex flex-col lg:flex-row items-center gap-6">
-            {/* Pie Chart */}
-            <div className="w-full lg:w-1/2 h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={reportData.paymentBreakdown.map((d) => ({
-                      name: d.method,
-                      value: d.revenue,
-                      ...d,
-                    }))}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                    nameKey="name"
-                    stroke="none"
-                  >
-                    {reportData.paymentBreakdown.map((_, idx) => (
-                      <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomPieTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+        {report ? (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/15 p-4 text-sm text-dark-200">
+            Periodo atual: {formatDateLabel(report.period.from)} ate {formatDateLabel(report.period.to)}
+            {" • "}
+            Comparacao: {formatDateLabel(report.previousPeriod.from)} ate {formatDateLabel(report.previousPeriod.to)}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {summary.map((item) => (
+          <div key={item.label} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500/15">
+                <item.icon className="h-5 w-5 text-brand-300" />
+              </div>
+              <ComparisonBadge metric={item.comparison} />
+            </div>
+            <p className="mt-4 text-sm text-dark-200">{item.label}</p>
+            <p className="mt-2 text-3xl font-black text-white">{item.value}</p>
+            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-dark-300">{item.helper}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+          <h2 className="text-2xl font-black text-white">Saude do periodo</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div className="flex items-center gap-3">
+                <Wallet className="h-5 w-5 text-brand-300" />
+                <p className="text-sm font-bold text-white">Receita realizada</p>
+              </div>
+              <p className="mt-4 text-3xl font-black text-white">
+                {currencyFormatter.format(report?.deliveredRevenue ?? 0)}
+              </p>
+              <p className="mt-2 text-xs uppercase tracking-[0.16em] text-dark-300">
+                {numberFormatter.format(report?.deliveredOrders ?? 0)} pedidos entregues
+              </p>
             </div>
 
-            {/* Legend */}
-            <div className="w-full lg:w-1/2 space-y-3">
-              {reportData.paymentBreakdown.map((pm, idx) => (
-                <div key={pm.method} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
-                    />
-                    <span className="text-sm text-white">{pm.method}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-white font-medium">{formatCurrency(pm.revenue)}</p>
-                    <p className="text-xs text-dark-300">
-                      {pm.percentage}% ({pm.count} pedidos)
-                    </p>
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div className="flex items-center gap-3">
+                <XCircle className="h-5 w-5 text-rose-300" />
+                <p className="text-sm font-bold text-white">Receita perdida</p>
+              </div>
+              <p className="mt-4 text-3xl font-black text-white">
+                {currencyFormatter.format(report?.cancelledRevenue ?? 0)}
+              </p>
+              <p className="mt-2 text-xs uppercase tracking-[0.16em] text-dark-300">
+                Taxa de cancelamento: {formatPercent(report?.cancellationRate ?? 0)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <p className="text-sm font-bold text-white">Pedidos em andamento</p>
+              <p className="mt-4 text-3xl font-black text-white">
+                {numberFormatter.format(report?.activeOrders ?? 0)}
+              </p>
+              <p className="mt-2 text-xs uppercase tracking-[0.16em] text-dark-300">
+                Pedidos ainda em operacao
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <p className="text-sm font-bold text-white">Receita de entrega</p>
+              <p className="mt-4 text-3xl font-black text-white">
+                {currencyFormatter.format(report?.deliveryRevenue ?? 0)}
+              </p>
+              <p className="mt-2 text-xs uppercase tracking-[0.16em] text-dark-300">
+                Parcela da taxa de entrega no periodo
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+          <h2 className="text-2xl font-black text-white">Formas de pagamento</h2>
+          <div className="mt-5 space-y-3">
+            {report?.paymentBreakdown.length ? (
+              report.paymentBreakdown.map((item) => (
+                <div key={item.method} className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-white">{item.method}</p>
+                      <p className="mt-1 text-xs text-dark-300">{item.count} pedido(s)</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-white">{currencyFormatter.format(item.revenue)}</p>
+                      <p className="mt-1 text-xs text-dark-300">{item.percentage.toFixed(1)}%</p>
+                    </div>
                   </div>
                 </div>
-              ))}
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-dark-200">
+                Nenhum pagamento registrado no periodo.
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+          <h2 className="text-2xl font-black text-white">Evolucao diaria</h2>
+          <div className="mt-5 space-y-3">
+            {report?.dailySales.length ? (
+              report.dailySales.map((day) => {
+                const width = maxDailyRevenue > 0 ? (day.revenue / maxDailyRevenue) * 100 : 0
+
+                return (
+                  <div key={day.date} className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-dark-300">Dia</p>
+                        <p className="mt-1 text-sm font-bold text-white">
+                          {new Date(`${day.date}T12:00:00`).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.18em] text-dark-300">Faturamento</p>
+                          <p className="mt-1 text-sm font-bold text-white">{currencyFormatter.format(day.revenue)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.18em] text-dark-300">Lucro</p>
+                          <p className="mt-1 text-sm font-bold text-emerald-300">{currencyFormatter.format(day.profit)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.18em] text-dark-300">Pedidos</p>
+                          <p className="mt-1 text-sm font-bold text-white">{day.orders}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 h-2 rounded-full bg-white/10">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-brand-400 to-brand-600"
+                        style={{ width: `${Math.max(width, 6)}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-dark-200">
+                Nenhum pedido encontrado no periodo selecionado.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+            <h2 className="text-2xl font-black text-white">Clientes e ticket</h2>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                <p className="text-sm text-dark-200">Clientes atendidos</p>
+                <p className="mt-2 text-3xl font-black text-white">{numberFormatter.format(report?.totalClients ?? 0)}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                <p className="text-sm text-dark-200">Ticket medio atual</p>
+                <p className="mt-2 text-3xl font-black text-brand-300">{currencyFormatter.format(report?.avgTicket ?? 0)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+            <div className="flex items-center gap-3">
+              <Package2 className="h-5 w-5 text-brand-300" />
+              <h2 className="text-2xl font-black text-white">Produtos mais vendidos</h2>
+            </div>
+            <div className="mt-5 space-y-3">
+              {report?.topProducts.length ? (
+                report.topProducts.slice(0, 5).map((product, index) => (
+                  <div key={`${product.name}-${index}`} className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-bold text-white">{product.name}</p>
+                        <p className="mt-1 text-xs text-dark-300">{numberFormatter.format(product.quantity)} unidades vendidas</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-white">{currencyFormatter.format(product.revenue)}</p>
+                        <p className="mt-1 text-xs text-emerald-300">Lucro {currencyFormatter.format(product.profit)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-dark-200">
+                  Nenhum produto vendido no periodo filtrado.
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }
