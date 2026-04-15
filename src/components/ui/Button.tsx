@@ -40,6 +40,7 @@ export const Button = forwardRef<
         className
       )}
       ref={ref}
+      type="button"
       {...props}
     >
       {children}

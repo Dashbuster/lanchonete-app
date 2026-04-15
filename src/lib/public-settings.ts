@@ -126,7 +126,7 @@ export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
     return {
       storeName: map.store_name?.trim() || defaultSettings.storeName,
       storeLogo: map.store_logo || null,
-      storeOpen: map.store_open !== "false",
+      storeOpen: map.store_open ? map.store_open === "true" : true,
       whatsapp: map.whatsapp || defaultSettings.whatsapp,
       instagramUrl: map.instagram || defaultSettings.instagramUrl,
       deliveryFee: Number.isFinite(deliveryFee) ? deliveryFee : defaultSettings.deliveryFee,

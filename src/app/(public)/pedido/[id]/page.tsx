@@ -67,14 +67,20 @@ function formatDate(date: string) {
 
 export default function OrderTrackingPage() {
   const params = useParams()
-  const orderId = params.id as string
+  const orderId = typeof params.id === "string" ? params.id : undefined
 
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [pollId, setPollId] = useState<number | null>(null)
 
   const fetchOrder = useCallback(async () => {
+    if (!orderId) {
+      setNotFound(true)
+      setOrder(null)
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await fetch(`/api/orders/${orderId}`)
       if (res.status === 404) {
@@ -108,10 +114,7 @@ export default function OrderTrackingPage() {
       fetchOrder()
     }, 10000)
 
-    setPollId(id)
-    return () => {
-      clearInterval(id)
-    }
+    return () => clearInterval(id)
   }, [order, fetchOrder])
 
   const currentStepIndex = useMemo(() => {
@@ -297,7 +300,7 @@ export default function OrderTrackingPage() {
             <div className="space-y-2 mb-6">
               {order.items?.map((item: any, idx: number) => (
                 <div
-                  key={idx}
+                  key={item.id ?? idx}
                   className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 transition-colors duration-300 hover:border-white/10"
                 >
                   {item.product?.image && (
@@ -331,19 +334,19 @@ export default function OrderTrackingPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-dark-300">Subtotal</span>
                 <span className="text-white">
-                  R$ {Number(order.subtotal).toFixed(2).replace(".", ",")}
+                  R$ {Number(order.subtotal ?? 0).toFixed(2).replace(".", ",")}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-dark-300">Taxa de entrega</span>
                 <span className="text-white">
-                  R$ {Number(order.deliveryFee).toFixed(2).replace(".", ",")}
+                  R$ {Number(order.deliveryFee ?? 0).toFixed(2).replace(".", ",")}
                 </span>
               </div>
               <div className="flex justify-between pt-3 border-t border-white/10">
                 <span className="font-bold text-white">Total</span>
                 <span className="text-xl font-black text-brand-400">
-                  R$ {Number(order.total).toFixed(2).replace(".", ",")}
+                  R$ {Number(order.total ?? 0).toFixed(2).replace(".", ",")}
                 </span>
               </div>
             </div>

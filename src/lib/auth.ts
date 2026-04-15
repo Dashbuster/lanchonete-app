@@ -1,9 +1,20 @@
-import crypto from "crypto";
-import { NextAuthOptions } from "next-auth";
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/types";
+
+/**
+ * Constant-time comparison for plain-text strings.
+ * Hashes both inputs so they're always the same length (32 bytes),
+ * which satisfies timingSafeEqual's buffer-length requirement.
+ */
+function safeCompare(a: string, b: string): boolean {
+  const hashA = createHash("sha256").update(a).digest();
+  const hashB = createHash("sha256").update(b).digest();
+  return timingSafeEqual(hashA, hashB);
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -48,10 +59,7 @@ export const authOptions: NextAuthOptions = {
           adminEmail &&
           adminPassword &&
           email === adminEmail &&
-          crypto.timingSafeEqual(
-            Buffer.from(password),
-            Buffer.from(adminPassword),
-          )
+          safeCompare(password, adminPassword)
         ) {
           console.warn("Fallback admin auth used — hash the password in env.");
           return {

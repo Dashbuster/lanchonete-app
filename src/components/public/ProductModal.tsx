@@ -61,6 +61,17 @@ export function ProductModal({
     setSelectedAddons({})
   }, [open, product])
 
+  useEffect(() => {
+    if (!open) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose()
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [open, onClose])
+
   const groupedAddons = useMemo(() => {
     if (!product) {
       return []

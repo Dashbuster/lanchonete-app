@@ -43,12 +43,16 @@ export function ProductFilters({
 
   function updateMinPrice(value: string) {
     setMinPrice(value)
-    onPriceRangeChange(value ? Number(value) : null, maxPrice ? Number(maxPrice) : null)
+    const min = value ? Number(value) : null
+    if (min !== null && (!Number.isFinite(min) || min < 0)) return
+    onPriceRangeChange(min, maxPrice && Number.isFinite(Number(maxPrice)) ? Number(maxPrice) : null)
   }
 
   function updateMaxPrice(value: string) {
     setMaxPrice(value)
-    onPriceRangeChange(minPrice ? Number(minPrice) : null, value ? Number(value) : null)
+    const max = value ? Number(value) : null
+    if (max !== null && (!Number.isFinite(max) || max < 0)) return
+    onPriceRangeChange(minPrice && Number.isFinite(Number(minPrice)) ? Number(minPrice) : null, max)
   }
 
   function updateSort(value: SortOption) {

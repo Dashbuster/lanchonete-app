@@ -182,9 +182,10 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
 
   const featuredProducts = products.slice(0, 3)
   const categoryCount = categories.filter((category) => category.active).length
-  const regionNeighborhoods = initialSettings.neighborhoods.slice(0, 6)
-  const neighborhoodsLabel = initialSettings.neighborhoods.length
-    ? initialSettings.neighborhoods.join(", ")
+  const neighborhoods = initialSettings.neighborhoods ?? []
+  const regionNeighborhoods = neighborhoods.slice(0, 6)
+  const neighborhoodsLabel = neighborhoods.length
+    ? neighborhoods.join(", ")
     : "Consulte o atendimento para confirmar a cobertura."
   const hoursText = getHoursText(initialSettings)
 

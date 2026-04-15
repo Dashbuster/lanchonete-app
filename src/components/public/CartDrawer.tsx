@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import Image from "next/image"
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -19,6 +20,17 @@ export function CartDrawer({ open, onClose, deliveryFee }: CartDrawerProps) {
   const subtotal = total()
   const fee = items.length ? deliveryFee : 0
   const finalTotal = subtotal + fee
+
+  useEffect(() => {
+    if (!open) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose()
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [open, onClose])
 
   return (
     <div
