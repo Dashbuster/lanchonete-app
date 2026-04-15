@@ -73,10 +73,10 @@ export function PublicShell({
     <div className="relative min-h-screen overflow-hidden bg-dark-900 text-white">
       <div className="pointer-events-none absolute inset-0 soft-grid opacity-20" />
 
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-dark-900/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-dark-900/80 backdrop-blur-xl transition-colors duration-300">
         <div className="section-shell flex h-20 items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 shadow-[0_18px_40px_rgba(249,115,22,0.28)]">
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 shadow-[0_18px_40px_rgba(249,115,22,0.28)] transition-all duration-500 group-hover:shadow-[0_18px_50px_rgba(249,115,22,0.4)] group-hover:scale-105">
               {settings.storeLogo ? (
                 <Image
                   src={settings.storeLogo}
@@ -86,12 +86,12 @@ export function PublicShell({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <Flame className="h-6 w-6 text-white" />
+                <Flame className="h-6 w-6 text-white transition-transform duration-500 group-hover:scale-110" />
               )}
             </div>
             <div>
               <p
-                className="text-xl font-extrabold uppercase tracking-[0.18em] text-white"
+                className="text-xl font-extrabold uppercase tracking-[0.18em] text-white transition-colors duration-300 group-hover:text-brand-100"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {settings.storeName}
@@ -111,7 +111,7 @@ export function PublicShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm font-semibold transition",
+                  "relative rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300",
                   pathname === item.href
                     ? "bg-white/[0.08] text-white"
                     : "text-dark-200 hover:bg-white/[0.06] hover:text-white"
@@ -130,12 +130,12 @@ export function PublicShell({
 
             <button
               onClick={() => setCartOpen(true)}
-              className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] transition hover:bg-white/[0.12]"
+              className="group relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] transition-all duration-300 hover:border-brand-400/30 hover:bg-white/[0.12]"
               aria-label="Abrir carrinho"
             >
-              <ShoppingBag className="h-5 w-5" />
+              <ShoppingBag className="h-5 w-5 transition-colors duration-300 group-hover:text-brand-300" />
               {count > 0 && (
-                <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[11px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[11px] font-bold text-white animate-scale-in shadow-[0_4px_12px_rgba(249,115,22,0.4)]">
                   {count > 99 ? "99+" : count}
                 </span>
               )}
@@ -143,7 +143,7 @@ export function PublicShell({
 
             <button
               onClick={() => setMobileMenuOpen((current) => !current)}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] transition hover:bg-white/[0.12] md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] transition-all duration-300 hover:bg-white/[0.12] md:hidden"
               aria-label="Abrir menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -152,19 +152,19 @@ export function PublicShell({
         </div>
 
         {mobileMenuOpen && (
-          <div className="section-shell pb-4 md:hidden">
+          <div className="section-shell animate-fade-in-up pb-4 md:hidden">
             <div className="glass-panel rounded-3xl p-3">
               <div className="flex flex-col gap-2">
                 <Link
                   href="/"
-                  className="rounded-2xl px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.08]"
+                  className="rounded-2xl px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Cardapio
                 </Link>
                 <Link
                   href="/checkout"
-                  className="rounded-2xl px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.08]"
+                  className="rounded-2xl px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Finalizar pedido
@@ -177,8 +177,9 @@ export function PublicShell({
 
       <main className="relative z-10 flex-1">{children}</main>
 
-      <footer className="relative z-10 border-t border-white/10 bg-black/20">
-        <div className="section-shell py-10">
+      <footer className="relative z-10 border-t border-white/5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/30 to-transparent" />
+        <div className="section-shell py-12">
           <div className="grid gap-8 md:grid-cols-4">
             <div className="md:col-span-2">
               <p
@@ -195,12 +196,12 @@ export function PublicShell({
 
             <div className="space-y-3 text-sm text-dark-200">
               <p className="font-semibold text-white">Contato</p>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-brand-400" />
+              <div className="flex items-center gap-2 group">
+                <Phone className="h-4 w-4 text-brand-400 flex-shrink-0" />
                 <span>{formatPhone(settings.whatsapp)}</span>
               </div>
               <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 text-brand-400" />
+                <MapPin className="mt-0.5 h-4 w-4 text-brand-400 flex-shrink-0" />
                 <span>{settings.regionCenter}</span>
               </div>
             </div>
@@ -213,10 +214,13 @@ export function PublicShell({
                 href={settings.instagramUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 text-white transition hover:text-brand-300"
+                className="group inline-flex items-center gap-2 text-white transition-colors hover:text-brand-300"
               >
-                <Instagram className="h-4 w-4" />
-                {instagramLabel}
+                <Instagram className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" />
+                <span className="relative">
+                  {instagramLabel}
+                  <span className="absolute -bottom-px left-0 h-px w-0 bg-brand-400 transition-all duration-300 group-hover:w-full" />
+                </span>
               </a>
             </div>
           </div>

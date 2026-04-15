@@ -150,32 +150,38 @@ export default function OrderTrackingPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="relative max-w-2xl mx-auto px-4 py-8">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full bg-brand-500/10 blur-[80px]" />
+
       {/* Header */}
-      <div className="mb-8">
+      <div className="animate-fade-in-up relative mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">
-              Acompanhamento do Pedido
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-200">
+              Acompanhamento em tempo real
+            </p>
+            <h1 className="mt-2 text-3xl font-black text-white" style={{ fontFamily: "var(--font-heading)" }}>
+              Pedido #{order?.id?.slice(0, 8).toUpperCase()}
             </h1>
-            <p className="text-dark-400 mt-1">
-              Pedido realizado em {order?.createdAt ? formatDate(order.createdAt) : ""}
+            <p className="text-dark-400 mt-1 text-sm">
+              {order?.createdAt ? formatDate(order.createdAt) : ""}
             </p>
           </div>
           <button
             onClick={fetchOrder}
-            className="rounded-lg p-2 text-dark-400 hover:text-white hover:bg-dark-700 transition-colors"
+            className="group rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-dark-400 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw className="w-5 h-5 transition-transform duration-500 group-hover:rotate-180" />
           </button>
         </div>
       </div>
 
       {/* Cancelled State */}
       {isCancelled && (
-        <div className="mb-8 rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-center">
-          <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h2 className="text-xl font-bold text-red-400">
+        <div className="animate-scale-in mb-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center backdrop-blur-sm">
+          <XCircle className="w-20 h-20 mx-auto text-red-400 mb-4 animate-pulse" />
+          <h2 className="text-2xl font-bold text-red-300">
             Pedido Cancelado
           </h2>
           <p className="text-dark-300 mt-2">
@@ -186,9 +192,9 @@ export default function OrderTrackingPage() {
 
       {/* Delivered State */}
       {isComplete && (
-        <div className="mb-8 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
-          <CheckCircle2 className="w-16 h-16 mx-auto text-emerald-500 mb-4" />
-          <h2 className="text-xl font-bold text-emerald-400">
+        <div className="animate-scale-in mb-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center backdrop-blur-sm">
+          <CheckCircle2 className="w-20 h-20 mx-auto text-emerald-400 mb-4 animate-bounce" />
+          <h2 className="text-2xl font-bold text-emerald-300">
             Pedido Entregue!
           </h2>
           <p className="text-dark-300 mt-2">
@@ -199,8 +205,8 @@ export default function OrderTrackingPage() {
 
       {/* Status Timeline */}
       {!isCancelled && (
-        <div className="mb-8 rounded-xl border border-dark-600 bg-dark-800 p-6">
-          <h3 className="text-base font-semibold text-white mb-6">
+        <div className="animate-fade-in-up mb-8 rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-200 mb-6">
             Status do Pedido
           </h3>
           <div className="relative">
@@ -212,28 +218,35 @@ export default function OrderTrackingPage() {
               return (
                 <div
                   key={step.status}
-                  className="flex items-start gap-4 relative"
+                  className={`flex items-start gap-4 relative ${
+                    index < currentStepIndex + 1 ? "animate-fade-in-up" : ""
+                  }`}
+                  style={index <= currentStepIndex ? { animationDelay: `${index * 120}ms` } : {}}
                 >
                   {/* Timeline line */}
                   {index < STATUS_STEPS.length - 1 && (
-                    <div
-                      className={`absolute left-[19px] top-10 bottom-0 w-0.5 ${
-                        isPast
-                          ? "bg-emerald-500"
-                          : index === currentStepIndex
-                            ? "bg-dark-600"
-                            : "bg-dark-600"
-                      }`}
-                    />
+                    <div className="absolute left-[19px] top-10 bottom-0 w-0.5 overflow-hidden rounded-full">
+                      {/* Completed segment */}
+                      <div
+                        className={`absolute inset-0 transition-all duration-700 ${
+                          isPast ? "bg-emerald-500" : "bg-dark-600"
+                        }`}
+                      />
+                      {isActive && (
+                        <div
+                          className="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-b from-brand-500/60 to-transparent transition-all duration-700"
+                        />
+                      )}
+                    </div>
                   )}
 
                   {/* Icon dot */}
                   <div
-                    className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 transition-colors ${
+                    className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 transition-all duration-500 ${
                       isPast
-                        ? "bg-emerald-500 text-white"
+                        ? "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]"
                         : isActive
-                          ? "bg-brand-500 text-white animate-pulse"
+                          ? "bg-brand-500 text-white animate-pulse-glow"
                           : "bg-dark-700 text-dark-400 border border-dark-600"
                     }`}
                   >
@@ -243,18 +256,24 @@ export default function OrderTrackingPage() {
                   {/* Label */}
                   <div className="flex-1 pb-8">
                     <p
-                      className={`font-medium ${
+                      className={`font-semibold transition-colors duration-300 ${
                         isPast
                           ? "text-emerald-400"
                           : isActive
-                            ? "text-brand-500"
+                            ? "text-brand-400"
                             : "text-dark-400"
                       }`}
                     >
                       {step.label}
                     </p>
+                    {isActive && (
+                      <p className="text-xs text-brand-300/60 mt-0.5 animate-pulse">
+                        Em andamento...
+                      </p>
+                    )}
                     {isPast && (
-                      <p className="text-xs text-dark-400 mt-0.5">
+                      <p className="text-xs text-dark-400 mt-0.5 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                         Concluído
                       </p>
                     )}
@@ -268,39 +287,39 @@ export default function OrderTrackingPage() {
 
       {/* Order Details */}
       {order && (
-        <div className="space-y-6">
-          <div className="rounded-xl border border-dark-600 bg-dark-800 p-6">
-            <h3 className="text-base font-semibold text-white mb-4">
+        <div className="animate-fade-in-up space-y-6" style={{ animationDelay: "300ms" }}>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-200 mb-4">
               Detalhes do Pedido
             </h3>
 
             {/* Items */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2 mb-6">
               {order.items?.map((item: any, idx: number) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-3 py-3 border-b border-dark-600 last:border-0"
+                  className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 transition-colors duration-300 hover:border-white/10"
                 >
                   {item.product?.image && (
-                    <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-dark-700">
+                    <div className="relative w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden bg-dark-700">
                       <Image
                         src={item.product.image}
                         alt={item.product.name}
                         fill
                         className="object-cover"
-                        sizes="48px"
+                        sizes="56px"
                       />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white truncate">
+                    <p className="text-sm font-medium text-white">
                       {item.product?.name || "Produto"}
                     </p>
                     <p className="text-xs text-dark-400">
                       {item.quantity}x R$ {Number(item.price).toFixed(2).replace(".", ",")}
                     </p>
                   </div>
-                  <span className="text-sm font-medium text-white">
+                  <span className="text-sm font-bold text-white">
                     R$ {(Number(item.price) * item.quantity).toFixed(2).replace(".", ",")}
                   </span>
                 </div>
@@ -321,9 +340,9 @@ export default function OrderTrackingPage() {
                   R$ {Number(order.deliveryFee).toFixed(2).replace(".", ",")}
                 </span>
               </div>
-              <div className="flex justify-between pt-3 border-t border-dark-600">
-                <span className="font-semibold text-white">Total</span>
-                <span className="text-lg font-bold text-brand-500">
+              <div className="flex justify-between pt-3 border-t border-white/10">
+                <span className="font-bold text-white">Total</span>
+                <span className="text-xl font-black text-brand-400">
                   R$ {Number(order.total).toFixed(2).replace(".", ",")}
                 </span>
               </div>
@@ -332,11 +351,11 @@ export default function OrderTrackingPage() {
 
           {/* Payment & Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-dark-600 bg-dark-800 p-4">
-              <h4 className="text-sm font-medium text-dark-300 mb-2">
+            <div className="animate-fade-in-up rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm stagger-1">
+              <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-300 mb-2">
                 Pagamento
               </h4>
-              <p className="text-white font-medium">
+              <p className="text-white font-bold">
                 {PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod}
               </p>
               {order.changeFor && (
@@ -346,11 +365,11 @@ export default function OrderTrackingPage() {
               )}
             </div>
 
-            <div className="rounded-xl border border-dark-600 bg-dark-800 p-4">
-              <h4 className="text-sm font-medium text-dark-300 mb-2">
+            <div className="animate-fade-in-up rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm stagger-2">
+              <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-300 mb-2">
                 Cliente
               </h4>
-              <p className="text-white font-medium">
+              <p className="text-white font-bold">
                 {order.customerName || "Não informado"}
               </p>
               {order.customerPhone && (
@@ -359,7 +378,7 @@ export default function OrderTrackingPage() {
                 </p>
               )}
               {order.address && (
-                <p className="text-sm text-dark-400 mt-1">
+                <p className="text-sm text-dark-400 mt-1 line-clamp-2">
                   {order.address}
                 </p>
               )}
@@ -367,7 +386,7 @@ export default function OrderTrackingPage() {
           </div>
 
           <p className="text-center text-xs text-dark-500 flex items-center justify-center gap-1">
-            <RotateCcw className="w-3 h-3" />
+            <RotateCcw className="w-3 h-3 animate-spin" style={{ animationDuration: "4s" }} />
             Atualização automática a cada 10 segundos
           </p>
         </div>

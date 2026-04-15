@@ -298,15 +298,53 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
     <div className="section-shell py-8">
       <button
         onClick={() => router.push("/")}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-dark-100 transition hover:text-white"
+        className="group mb-6 inline-flex items-center gap-2 text-sm font-semibold text-dark-100 transition-all duration-300 hover:text-white"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" />
         Voltar ao cardapio
       </button>
 
+      {/* Step Progress Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-center gap-0">
+          {[
+            { label: "Dados", done: !!customerName.trim() },
+            { label: "Pagamento", done: true },
+            { label: "Resumo", done: true },
+          ].map((step, idx) => (
+            <div key={step.label} className="flex items-center">
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold transition-all duration-500 ${
+                    idx === 0
+                      ? "bg-brand-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] animate-pulse-glow"
+                      : step.done
+                        ? "bg-emerald-500 text-white"
+                        : "border border-white/10 bg-white/[0.04] text-dark-300"
+                  }`}
+                >
+                  {step.done ? "✓" : idx + 1}
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.15em] text-dark-300">
+                  {step.label}
+                </span>
+              </div>
+              {idx < 2 && (
+                <div className="mx-3 h-0.5 w-12 rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-brand-500 transition-all duration-700"
+                    style={{ width: step.done ? "100%" : "0%" }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">
-          <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-6">
+          <div className="animate-fade-in-up rounded-[32px] border border-white/10 bg-white/[0.04] p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-200">
               Etapa 1
             </p>
@@ -317,13 +355,13 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <button
                 onClick={() => setOrderType("delivery")}
-                className={`rounded-[28px] border p-5 text-left transition ${
+                className={`rounded-[28px] border p-5 text-left transition-all duration-300 ${
                   orderType === "delivery"
-                    ? "border-brand-500 bg-brand-500/10"
-                    : "border-white/10 bg-black/10"
+                    ? "border-brand-500 bg-brand-500/10 shadow-[0_0_30px_rgba(249,115,22,0.08)] scale-[1.02]"
+                    : "border-white/10 bg-black/10 hover:border-white/15 hover:bg-white/[0.04]"
                 }`}
               >
-                <Truck className="h-6 w-6 text-brand-300" />
+                <Truck className="h-6 w-6 text-brand-300 transition-transform duration-300 group-hover:translate-x-1" />
                 <p className="mt-4 text-lg font-bold text-white">Entrega</p>
                 <p className="mt-2 text-sm leading-7 text-dark-200">
                   Pedido vai ate o endereco informado.
@@ -333,10 +371,10 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
               <button
                 onClick={() => settings.acceptsPickup && setOrderType("pickup")}
                 disabled={!settings.acceptsPickup}
-                className={`rounded-[28px] border p-5 text-left transition ${
+                className={`rounded-[28px] border p-5 text-left transition-all duration-300 ${
                   orderType === "pickup"
-                    ? "border-brand-500 bg-brand-500/10"
-                    : "border-white/10 bg-black/10"
+                    ? "border-brand-500 bg-brand-500/10 shadow-[0_0_30px_rgba(249,115,22,0.08)] scale-[1.02]"
+                    : "border-white/10 bg-black/10 hover:border-white/15 hover:bg-white/[0.04]"
                 } ${!settings.acceptsPickup ? "cursor-not-allowed opacity-50" : ""}`}
               >
                 <Store className="h-6 w-6 text-brand-300" />
@@ -411,13 +449,15 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
                   <button
                     key={option.id}
                     onClick={() => setPaymentMethod(option.id)}
-                    className={`rounded-[28px] border p-5 text-left transition ${
+                    className={`rounded-[28px] border p-5 text-left transition-all duration-300 ${
                       paymentMethod === option.id
-                        ? "border-brand-500 bg-brand-500/10"
-                        : "border-white/10 bg-black/10"
+                        ? "border-brand-500 bg-brand-500/10 shadow-[0_0_30px_rgba(249,115,22,0.1)] scale-[1.02]"
+                        : "border-white/10 bg-black/10 hover:border-white/15 hover:bg-white/[0.04]"
                     }`}
                   >
-                    <Icon className="h-6 w-6 text-brand-300" />
+                    <Icon className={`h-6 w-6 transition-colors duration-300 ${
+                      paymentMethod === option.id ? "text-brand-300" : "text-brand-300"
+                    }`} />
                     <p className="mt-4 text-base font-bold text-white">
                       {option.title}
                     </p>

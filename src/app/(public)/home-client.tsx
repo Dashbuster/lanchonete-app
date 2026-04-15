@@ -188,26 +188,32 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
 
   return (
     <div className="pb-16">
+      {/* Hero Section */}
       <section className="section-shell pt-8 sm:pt-10">
         <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(249,115,22,0.24),rgba(20,15,11,0.94)_50%,rgba(12,14,14,0.98))] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)] sm:p-8">
-            <div className="absolute -right-8 top-4 h-40 w-40 rounded-full bg-brand-500/20 blur-3xl" />
-            <div className="absolute bottom-0 right-20 h-32 w-32 rounded-full bg-amber-300/10 blur-3xl" />
+          {/* Main Hero Card */}
+          <div className="animate-fade-in-up relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(249,115,22,0.28),rgba(20,15,11,0.92)_55%,rgba(12,14,14,0.98))] p-6 shadow-[0_30px_80px_rgba(249,115,22,0.12),0_20px_60px_rgba(0,0,0,0.3)] sm:p-8">
+            {/* Animated blur orbs */}
+            <div className="pointer-events-none absolute -right-8 top-4 h-40 w-40 rounded-full bg-brand-500/20 blur-3xl animate-gradient" />
+            <div className="pointer-events-none absolute bottom-0 right-20 h-32 w-32 rounded-full bg-amber-300/10 blur-3xl floating-accent" />
+            <div className="pointer-events-none absolute left-10 top-1/2 h-24 w-24 rounded-full bg-orange-500/10 blur-3xl floating-accent" style={{ animationDelay: "2s" }} />
 
             <div className="relative flex flex-col gap-8">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.08] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-brand-100">
-                <Sparkles className="h-4 w-4 text-brand-300" />
-                Cardapio digital premium
+              <div className="animate-fade-in-up inline-flex w-fit items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-brand-100 backdrop-blur-sm stagger-1">
+                <Flame className="h-4 w-4 text-brand-300" />
+                Feito com fogo & carinho
               </div>
 
-              <div className="max-w-2xl">
+              <div className="animate-fade-in-up max-w-2xl stagger-2">
                 <h1
-                  className="text-5xl font-black uppercase leading-none text-white sm:text-6xl lg:text-7xl"
+                  className="relative text-5xl font-black uppercase leading-none text-white sm:text-6xl lg:text-7xl"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   hamburguer
                   <br />
-                  no ponto certo
+                  <span className="bg-gradient-to-r from-brand-300 via-brand-400 to-amber-400 bg-clip-text text-transparent animate-gradient">
+                    no ponto certo
+                  </span>
                 </h1>
                 <p className="mt-5 max-w-xl text-sm leading-7 text-dark-100 sm:text-base">
                   Monte combos, escolha extras, pague do seu jeito e acompanhe
@@ -216,9 +222,9 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="animate-fade-in-up flex flex-col gap-3 sm:flex-row stagger-3">
                 <Button
-                  className="gap-2"
+                  className="gap-2 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(249,115,22,0.3)] active:scale-[0.98]"
                   size="lg"
                   onClick={() => {
                     document
@@ -227,7 +233,7 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                   }}
                 >
                   Ver cardapio
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </Button>
                 <div className="glass-panel flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-dark-100">
                   <ShieldCheck className="h-5 w-5 text-emerald-300" />
@@ -235,40 +241,59 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="glass-panel rounded-2xl p-4">
+              <div className="animate-fade-in-up grid gap-3 sm:grid-cols-3 stagger-4">
+                <div className="group glass-panel rounded-2xl p-4 transition-all duration-300 hover:border-brand-400/20 hover:bg-brand-500/5">
                   <p className="text-xs uppercase tracking-[0.24em] text-dark-200">
                     Tempo medio
                   </p>
                   <p className="mt-2 flex items-center gap-2 text-lg font-bold text-white">
-                    <Clock3 className="h-5 w-5 text-brand-300" />
+                    <Clock3 className="h-5 w-5 text-brand-300 transition-transform duration-300 group-hover:rotate-12" />
                     25 a 35 min
                   </p>
                 </div>
-                <div className="glass-panel rounded-2xl p-4">
+                <div className="group glass-panel rounded-2xl p-4 transition-all duration-300 hover:border-brand-400/20 hover:bg-brand-500/5">
                   <p className="text-xs uppercase tracking-[0.24em] text-dark-200">
                     Regiao
                   </p>
                   <p className="mt-2 flex items-center gap-2 text-lg font-bold text-white">
-                    <MapPin className="h-5 w-5 text-brand-300" />
+                    <MapPin className="h-5 w-5 text-brand-300 transition-transform duration-300 group-hover:-translate-y-1" />
                     {initialSettings.regionLabel}
                   </p>
                 </div>
-                <div className="glass-panel rounded-2xl p-4">
+                <div className="group glass-panel rounded-2xl p-4 transition-all duration-300 hover:border-brand-400/20 hover:bg-brand-500/5">
                   <p className="text-xs uppercase tracking-[0.24em] text-dark-200">
                     Categorias
                   </p>
                   <p className="mt-2 flex items-center gap-2 text-lg font-bold text-white">
-                    <Flame className="h-5 w-5 text-brand-300" />
+                    <Flame className="h-5 w-5 text-brand-300 transition-transform duration-300 group-hover:scale-110" />
                     {categoryCount} sessoes
                   </p>
                 </div>
               </div>
             </div>
+
+            {/* Scroll indicator */}
+            <div className="absolute bottom-4 right-6 hidden sm:flex">
+              <button
+                onClick={() => {
+                  document
+                    .getElementById("cardapio")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }}
+                className="scroll-indicator flex flex-col items-center gap-1 text-dark-300 transition-colors hover:text-brand-300"
+                aria-label="Rolar para o cardapio"
+              >
+                <span className="text-[10px] uppercase tracking-[0.2em]">Ver mais</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </button>
+            </div>
           </div>
 
+          {/* Side Cards */}
           <div className="grid gap-4">
-            <div className="glass-panel rounded-[28px] p-5">
+            <div className="animate-fade-in-up glass-panel rounded-[28px] p-5 stagger-1">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.24em] text-dark-200">
@@ -278,7 +303,9 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                     {initialSettings.regionLabel}
                   </p>
                 </div>
-                <div className="h-4 w-4 rounded-full bg-emerald-400" />
+                <div className="relative h-4 w-4 rounded-full bg-emerald-400">
+                  <div className="absolute inset-0 h-4 w-4 rounded-full bg-emerald-400 animate-ping opacity-30" />
+                </div>
               </div>
 
               <p className="mt-4 text-sm leading-7 text-dark-200">
@@ -296,36 +323,7 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
               </div>
             </div>
 
-            <div className="glass-panel rounded-[28px] p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-dark-200">
-                Bairros atendidos
-              </p>
-              <p className="mt-2 text-xl font-bold text-white">
-                Confira a cobertura da entrega
-              </p>
-              <p className="mt-3 text-sm leading-7 text-dark-200">
-                {neighborhoodsLabel}
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {regionNeighborhoods.length > 0 ? (
-                  regionNeighborhoods.map((neighborhood) => (
-                    <span
-                      key={neighborhood}
-                      className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-white"
-                    >
-                      {neighborhood}
-                    </span>
-                  ))
-                ) : (
-                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-white">
-                    Consulte o atendimento
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="glass-panel rounded-[28px] p-5">
+            <div className="animate-fade-in-up glass-panel rounded-[28px] p-5 stagger-2">
               <p className="text-xs uppercase tracking-[0.24em] text-dark-200">
                 Mais pedidos
               </p>
@@ -333,23 +331,23 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                 {featuredProducts.map((product, index) => (
                   <div
                     key={product.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3"
+                    className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-all duration-300 hover:border-brand-400/20 hover:bg-brand-500/5"
                   >
                     <div>
-                      <p className="text-sm font-semibold text-white">
-                        {index + 1}. {product.name}
+                      <p className="text-sm font-semibold text-white group-hover:text-brand-100 transition-colors">
+                        <span className="text-brand-300">{index + 1}.</span> {product.name}
                       </p>
                       <p className="text-xs text-dark-200">
                         R$ {Number(product.price).toFixed(2).replace(".", ",")}
                       </p>
                     </div>
-                    <Star className="h-4 w-4 text-amber-300" />
+                    <Star className="h-4 w-4 text-amber-300 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="glass-panel rounded-[28px] p-5">
+            <div className="animate-fade-in-up glass-panel rounded-[28px] p-5 stagger-3">
               <p className="text-xs uppercase tracking-[0.24em] text-dark-200">
                 Status da loja
               </p>
@@ -358,10 +356,14 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                   {storeOpen ? "Aberta agora" : "Fechada no momento"}
                 </p>
                 <div
-                  className={`h-4 w-4 rounded-full ${
+                  className={`relative h-4 w-4 rounded-full ${
                     storeOpen ? "bg-emerald-400" : "bg-red-400"
                   }`}
-                />
+                >
+                  {storeOpen && (
+                    <div className="absolute inset-0 h-4 w-4 rounded-full bg-emerald-400 animate-ping opacity-30" />
+                  )}
+                </div>
               </div>
               <p className="mt-4 text-sm leading-7 text-dark-200">
                 {hoursText}
@@ -371,21 +373,22 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
         </div>
       </section>
 
+      {/* Search Bar */}
       <section className="section-shell mt-8">
         <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          <div className="glass-panel rounded-[28px] px-5 py-4">
+          <div className="animate-fade-in-up glass-panel rounded-[28px] px-5 py-4">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-dark-300" />
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Procure por smash, combo, batata, molho, milk-shake..."
-                className="w-full rounded-2xl border border-white/10 bg-black/20 py-4 pl-12 pr-4 text-sm text-white placeholder:text-dark-300 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                className="w-full rounded-2xl border border-white/10 bg-black/20 py-4 pl-12 pr-4 text-sm text-white placeholder:text-dark-300 outline-none transition-all duration-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 focus:bg-black/30"
               />
             </div>
           </div>
 
-          <div className="glass-panel rounded-[28px] px-5 py-4 text-sm text-dark-100">
+          <div className="animate-fade-in-up glass-panel rounded-[28px] px-5 py-4 text-sm text-dark-100 stagger-1">
             <p className="font-semibold text-white">Entrega rapida</p>
             <p className="mt-2 leading-7">
               Checkout em poucos passos com resumo ao vivo e meios de pagamento
@@ -395,14 +398,15 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
         </div>
       </section>
 
+      {/* Category Pills */}
       <section className="section-shell mt-6">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 scrollbar-hide">
           <button
             onClick={() => setSelectedCategory("all")}
-            className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
+            className={`snap-start rounded-full px-5 py-3 text-sm font-semibold transition-all duration-300 ${
               selectedCategory === "all"
-                ? "bg-brand-500 text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)]"
-                : "border border-white/10 bg-white/[0.04] text-dark-100 hover:bg-white/[0.08]"
+                ? "bg-brand-500 text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)] scale-[1.03]"
+                : "border border-white/10 bg-white/[0.04] text-dark-100 hover:bg-white/[0.08] hover:border-white/15 hover:scale-[1.02]"
             }`}
           >
             Tudo
@@ -421,10 +425,10 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
+                  className={`snap-start rounded-full px-5 py-3 text-sm font-semibold transition-all duration-300 ${
                     selectedCategory === category.id
-                      ? "bg-brand-500 text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)]"
-                      : "border border-white/10 bg-white/[0.04] text-dark-100 hover:bg-white/[0.08]"
+                      ? "bg-brand-500 text-white shadow-[0_14px_30px_rgba(249,115,22,0.28)] scale-[1.03]"
+                      : "border border-white/10 bg-white/[0.04] text-dark-100 hover:bg-white/[0.08] hover:border-white/15 hover:scale-[1.02]"
                   }`}
                 >
                   {category.name}
@@ -434,6 +438,7 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
         </div>
       </section>
 
+      {/* Product Grid */}
       <section className="section-shell mt-6" id="cardapio">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
@@ -466,7 +471,7 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="glass-panel rounded-[28px] px-6 py-16 text-center">
+          <div className="animate-fade-in glass-panel rounded-[28px] px-6 py-16 text-center">
             <p
               className="text-3xl font-black uppercase text-white"
               style={{ fontFamily: "var(--font-heading)" }}
@@ -480,19 +485,24 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredProducts.map((product) => (
-              <ProductCard
+            {filteredProducts.map((product, idx) => (
+              <div
                 key={product.id}
-                name={product.name}
-                description={product.description}
-                price={Number(product.price)}
-                image={product.image}
-                available={product.available}
-                onAdd={() => {
-                  setSelectedProduct(product)
-                  setModalOpen(true)
-                }}
-              />
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${Math.min(idx * 60, 480)}ms` }}
+              >
+                <ProductCard
+                  name={product.name}
+                  description={product.description}
+                  price={Number(product.price)}
+                  image={product.image}
+                  available={product.available}
+                  onAdd={() => {
+                    setSelectedProduct(product)
+                    setModalOpen(true)
+                  }}
+                />
+              </div>
             ))}
           </div>
         )}

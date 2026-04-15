@@ -183,10 +183,10 @@ export function ProductModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-md transition-opacity duration-300 sm:items-center sm:p-6">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative z-10 flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[32px] border border-white/10 bg-dark-900 shadow-[0_35px_90px_rgba(0,0,0,0.45)] sm:rounded-[32px]">
+      <div className="animate-scale-in relative z-10 flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[32px] border border-white/10 bg-dark-900 shadow-[0_35px_90px_rgba(0,0,0,0.45)] sm:rounded-[32px]">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/35 text-white backdrop-blur-sm"
@@ -225,8 +225,8 @@ export function ProductModal({
               </p>
 
               <div className="mt-8 space-y-6">
-                {groupedAddons.map((group) => (
-                  <div key={group.id}>
+                {groupedAddons.map((group, gIdx) => (
+                  <div key={group.id} className="animate-fade-in-up" style={{ animationDelay: `${120 + gIdx * 80}ms` }}>
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div>
                         <p className="text-base font-bold text-white">{group.name}</p>
@@ -251,21 +251,23 @@ export function ProductModal({
                           <button
                             key={addon.id}
                             onClick={() => toggleAddon(group.id, addon.id)}
-                            className={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition ${
+                            className={`flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition-all duration-200 ${
                               isSelected
-                                ? "border-brand-500 bg-brand-500/10"
-                                : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                                ? "border-brand-500 bg-brand-500/10 shadow-[0_0_20px_rgba(249,115,22,0.08)]"
+                                : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/15"
                             }`}
                           >
                             <div className="flex items-center gap-3">
                               <div
-                                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                                className={`flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200 ${
                                   isSelected
-                                    ? "border-brand-500 bg-brand-500"
+                                    ? "border-brand-500 bg-brand-500 scale-110"
                                     : "border-dark-300"
                                 }`}
                               >
-                                {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
+                                {isSelected && (
+                                  <div className="h-2 w-2 rounded-full bg-white animate-scale-in" />
+                                )}
                               </div>
                               <span className="text-sm font-semibold text-white">
                                 {addon.name}

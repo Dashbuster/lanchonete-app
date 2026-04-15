@@ -19,15 +19,22 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const deliveryFee = items.length ? 6.9 : 0
   const finalTotal = subtotal + deliveryFee
 
-  if (!open) {
-    return null
-  }
-
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={onClose} />
+    <div
+      className={`fixed inset-0 z-50 transition-opacity duration-300 ${
+        open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+      }`}
+    >
+      <div
+        className="absolute inset-0 bg-black/65 backdrop-blur-sm transition-opacity duration-300"
+        onClick={onClose}
+      />
 
-      <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-white/10 bg-dark-900 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+      <aside
+        className={`absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-white/10 bg-dark-900 shadow-[0_30px_80px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-brand-200">
@@ -72,7 +79,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         ) : (
           <>
             <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-              {items.map((item) => {
+              {items.map((item, idx) => {
                 const itemTotal =
                   (item.price +
                     item.addons.reduce((sum, addon) => sum + addon.price, 0)) *
@@ -81,7 +88,8 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 return (
                   <article
                     key={item.id}
-                    className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4"
+                    className="animate-fade-in-up rounded-[28px] border border-white/10 bg-white/[0.04] p-4 transition-colors duration-300 hover:border-white/15"
+                    style={{ animationDelay: `${idx * 80}ms` }}
                   >
                     <div className="flex gap-4">
                       <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-white/[0.05]">
@@ -133,7 +141,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                         <div className="mt-4 flex items-center gap-3">
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]"
+                            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] transition-all duration-200 hover:border-white/20 hover:bg-white/[0.1] active:scale-95"
                           >
                             <Minus className="h-4 w-4" />
                           </button>
@@ -142,7 +150,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]"
+                            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] transition-all duration-200 hover:border-white/20 hover:bg-white/[0.1] active:scale-95"
                           >
                             <Plus className="h-4 w-4" />
                           </button>
