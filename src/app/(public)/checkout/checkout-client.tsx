@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   CreditCard,
   MapPin,
+  Minus,
+  Plus,
   QrCode,
   Receipt,
   Store,
@@ -520,8 +522,8 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
                           sizes="64px"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-2xl">
-                          Burger
+                        <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.35),rgba(20,15,11,0.9))] text-xl">
+                          🍔
                         </div>
                       )}
                     </div>
@@ -553,18 +555,18 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
                       <div className="mt-3 flex items-center gap-3">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]"
+                          className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-dark-200 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.1] hover:text-white active:scale-95"
                         >
-                          -
+                          <Minus className="h-3.5 w-3.5" />
                         </button>
                         <span className="w-5 text-center text-sm font-bold text-white">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]"
+                          className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-dark-200 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.1] hover:text-white active:scale-95"
                         >
-                          +
+                          <Plus className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </div>

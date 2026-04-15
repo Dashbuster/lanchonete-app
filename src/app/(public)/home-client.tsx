@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
+  Truck,
 } from "lucide-react"
 import { ProductCard } from "@/components/public/ProductCard"
 import { ProductFilters } from "@/components/public/ProductFilters"
@@ -19,6 +20,7 @@ import {
   ProductCardSkeleton,
 } from "@/components/ui/Skeleton"
 import { Button } from "@/components/ui/Button"
+import { Reveal } from "@/components/ui/Reveal"
 import type { PublicSiteSettings } from "@/lib/public-settings"
 
 function getHoursText(settings: PublicSiteSettings) {
@@ -388,12 +390,18 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
             </div>
           </div>
 
-          <div className="animate-fade-in-up glass-panel rounded-[28px] px-5 py-4 text-sm text-dark-100 stagger-1">
-            <p className="font-semibold text-white">Entrega rapida</p>
-            <p className="mt-2 leading-7">
-              Checkout em poucos passos com resumo ao vivo e meios de pagamento
-              integrados a experiencia.
-            </p>
+          <div className="animate-fade-in-up relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-brand-500/10 via-dark-900 to-dark-900 px-5 py-4 stagger-1">
+            <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand-500/10 blur-2xl" />
+            <div className="relative flex items-start gap-3">
+              <Truck className="h-5 w-5 flex-shrink-0 text-brand-300 mt-0.5" />
+              <div>
+                <p className="font-semibold text-white">Entrega rapida</p>
+                <p className="mt-2 leading-7 text-dark-100">
+                  Checkout em poucos passos com resumo ao vivo e meios de pagamento
+                  integrados a experiencia.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
