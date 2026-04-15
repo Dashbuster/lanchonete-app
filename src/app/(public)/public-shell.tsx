@@ -227,7 +227,7 @@ export function PublicShell({
         </div>
       </footer>
 
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} deliveryFee={settings.deliveryFee} />
     </div>
   )
 }

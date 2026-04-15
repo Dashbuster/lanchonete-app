@@ -9,15 +9,16 @@ import { Button } from "@/components/ui/Button"
 interface CartDrawerProps {
   open: boolean
   onClose: () => void
+  deliveryFee: number
 }
 
-export function CartDrawer({ open, onClose }: CartDrawerProps) {
+export function CartDrawer({ open, onClose, deliveryFee }: CartDrawerProps) {
   const router = useRouter()
   const { items, clearCart, removeItem, total, updateQuantity } = useCart()
 
   const subtotal = total()
-  const deliveryFee = items.length ? 6.9 : 0
-  const finalTotal = subtotal + deliveryFee
+  const fee = items.length ? deliveryFee : 0
+  const finalTotal = subtotal + fee
 
   return (
     <div
@@ -170,7 +171,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 </div>
                 <div className="flex items-center justify-between text-dark-200">
                   <span>Entrega estimada</span>
-                  <span>R$ {deliveryFee.toFixed(2).replace(".", ",")}</span>
+                  <span>R$ {fee.toFixed(2).replace(".", ",")}</span>
                 </div>
                 <div className="flex items-center justify-between border-t border-white/10 pt-3 text-base font-bold text-white">
                   <span>Total</span>
