@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 
 type Theme = "dark" | "light"
 
@@ -12,20 +12,24 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 function getSystemTheme(): Theme {
-  if (typeof window === 'undefined') return "dark"
+  if (typeof window === "undefined") return "dark"
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
+function getInitialTheme(): Theme {
+  if (typeof window === "undefined") return "dark"
+  const saved = localStorage.getItem("theme")
+  if (saved === "dark" || saved === "light") return saved
+  return getSystemTheme()
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark")
-  const [mounted, setMounted] = useState(false)
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    setMounted(true)
-    if (typeof window === 'undefined') return
-
     const saved = localStorage.getItem("theme") as Theme | null
-    if (saved) {
+    if (saved && (saved === "dark" || saved === "light")) {
       setTheme(saved)
     } else {
       setTheme(getSystemTheme())
@@ -33,26 +37,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!mounted || typeof window === 'undefined') return
-
     if (theme === "dark") {
       document.documentElement.classList.add("dark")
     } else {
       document.documentElement.classList.remove("dark")
     }
-  }, [theme, mounted])
+  }, [theme])
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark"
     setTheme(newTheme)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("theme", newTheme)
-    }
-  }
-
-  // Prevent hydration mismatch - don't set class until mounted
-  if (!mounted) {
-    return <>{children}</>
+    localStorage.setItem("theme", newTheme)
   }
 
   return (
