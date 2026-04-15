@@ -40,16 +40,6 @@ interface CategoryFormData {
   active: boolean
 }
 
-// ─── Mock Data ──────────────────────────────────────────────────────
-
-const mockCategories: Category[] = [
-  { id: "1", name: "Lanches", description: "Hamburgeres, sanduiches e wraps", image: null, order: 1, active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
-  { id: "2", name: "Bebidas", description: "Refrigerantes, sucos e aguas", image: null, order: 2, active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
-  { id: "3", name: "Porcoes", description: "Batata frita, onion rings e mais", image: null, order: 3, active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
-  { id: "4", name: "Sobremesas", description: "Doces e sobremesas diversas", image: null, order: 4, active: true, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
-  { id: "5", name: "Combos", description: "Combos promocionais", image: null, order: 5, active: false, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },
-]
-
 const emptyFormData: CategoryFormData = {
   name: "",
   description: "",
@@ -136,19 +126,22 @@ export default function CategoriasPage() {
   const [formData, setFormData] = useState<CategoryFormData>(emptyFormData)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [requestError, setRequestError] = useState<string | null>(null)
 
   const fetchCategories = useCallback(async () => {
     setLoading(true)
+    setRequestError(null)
     try {
       const res = await fetch("/api/categories")
       if (res.ok) {
         const json = await res.json()
         setCategories(json)
       } else {
-        setCategories(mockCategories)
+        throw new Error("Nao foi possivel carregar as categorias.")
       }
     } catch {
-      setCategories(mockCategories)
+      setCategories([])
+      setRequestError("Erro ao carregar categorias do banco.")
     } finally {
       setLoading(false)
     }
@@ -189,6 +182,7 @@ export default function CategoriasPage() {
   const handleSubmit = async () => {
     if (!validateForm()) return
     setSubmitting(true)
+    setRequestError(null)
     try {
       if (editingCategory) {
         const res = await fetch(`/api/categories/${editingCategory.id}`, {
@@ -196,56 +190,28 @@ export default function CategoriasPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         })
-        if (res.ok) {
-          await fetchCategories()
-        } else {
-          // Optimistic update for mock
-          setCategories((prev) =>
-            prev.map((c) =>
-              c.id === editingCategory.id ? { ...c, ...formData } : c
-            )
-          )
+        if (!res.ok) {
+          throw new Error("Nao foi possivel salvar a categoria.")
         }
+
+        await fetchCategories()
       } else {
         const res = await fetch("/api/categories", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         })
-        if (res.ok) {
-          await fetchCategories()
-        } else {
-          // Optimistic update for mock
-          const newCategory: Category = {
-            id: String(Date.now()),
-            ...formData,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }
-          setCategories((prev) => [...prev, newCategory])
+        if (!res.ok) {
+          throw new Error("Nao foi possivel criar a categoria.")
         }
+
+        await fetchCategories()
       }
       setModalOpen(false)
-      setFormData(emptyFormData)
+      setFormData({ ...emptyFormData })
       setEditingCategory(null)
     } catch {
-      // Optimistic update fallback
-      if (editingCategory) {
-        setCategories((prev) =>
-          prev.map((c) =>
-            c.id === editingCategory.id ? { ...c, ...formData } : c
-          )
-        )
-      } else {
-        const newCategory: Category = {
-          id: String(Date.now()),
-          ...formData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-        setCategories((prev) => [...prev, newCategory])
-      }
-      setModalOpen(false)
+      setRequestError("Erro ao salvar categoria. Nenhuma alteracao foi persistida.")
     } finally {
       setSubmitting(false)
     }
@@ -258,10 +224,10 @@ export default function CategoriasPage() {
       if (res.ok) {
         fetchCategories()
       } else {
-        setCategories((prev) => prev.filter((c) => c.id !== id))
+        throw new Error("Nao foi possivel excluir a categoria.")
       }
     } catch {
-      setCategories((prev) => prev.filter((c) => c.id !== id))
+      setRequestError("Erro ao excluir categoria. Nenhuma alteracao foi persistida.")
     }
   }
 
@@ -276,14 +242,10 @@ export default function CategoriasPage() {
       if (res.ok) {
         fetchCategories()
       } else {
-        setCategories((prev) =>
-          prev.map((c) => (c.id === category.id ? updated : c))
-        )
+        throw new Error("Nao foi possivel atualizar a categoria.")
       }
     } catch {
-      setCategories((prev) =>
-        prev.map((c) => (c.id === category.id ? updated : c))
-      )
+      setRequestError("Erro ao atualizar categoria. Nenhuma alteracao foi persistida.")
     }
   }
 
@@ -306,6 +268,12 @@ export default function CategoriasPage() {
           Nova Categoria
         </Button>
       </div>
+
+      {requestError && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {requestError}
+        </div>
+      )}
 
       {/* Table */}
       <div className="rounded-xl border border-dark-600 bg-dark-800 overflow-hidden">
