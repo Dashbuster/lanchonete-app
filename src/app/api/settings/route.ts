@@ -1,26 +1,59 @@
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/api-auth";
+
+const ALLOWED_SETTING_KEYS = [
+  "delivery_fee",
+  "min_order_value",
+  "accepts_pickup",
+  "store_open",
+  "payment_pix",
+  "payment_credit_card",
+  "payment_debit_card",
+  "payment_cash",
+  "payment_on_site",
+  "whatsapp_enabled",
+  "whatsapp_mode",
+  "whatsapp_api_url",
+  "whatsapp_instance",
+  "whatsapp_token",
+  "whatsapp_api_key",
+  "whatsapp_timeout",
+  "whatsapp_retry_limit",
+  "store_name",
+  "store_logo",
+  "store_description",
+  "whatsapp_phone",
+  "mercadopago_enabled",
+  "mercadopago_public_key",
+] as const;
+
+const settingKeySchema = z.string().refine(
+  (key) => (ALLOWED_SETTING_KEYS as readonly string[]).includes(key),
+  { message: `Chave de configuracao invalida. Chaves validas: ${ALLOWED_SETTING_KEYS.join(", ")}` }
+);
 
 const settingsUpsertSchema = z.array(
   z.object({
-    key: z.string().min(1, 'Chave é obrigatória'),
-    value: z.string().min(1, 'Valor é obrigatório'),
+    key: settingKeySchema,
+    value: z.string(),
   })
 );
 
 const singleSettingSchema = z.object({
-  key: z.string().min(1, 'Chave é obrigatória'),
-  value: z.string().min(1, 'Valor é obrigatório'),
+  key: z.string().min(1, "Chave e obrigatoria"),
+  value: z.string(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   try {
     const settings = await prisma.setting.findMany({
-      orderBy: { key: 'asc' },
+      orderBy: { key: "asc" },
     });
 
-    // Return as a map for easier consumption
     const settingsMap: Record<string, string> = {};
     for (const setting of settings) {
       settingsMap[setting.key] = setting.value;
@@ -28,27 +61,29 @@ export async function GET() {
 
     return NextResponse.json(settingsMap);
   } catch (error) {
-    console.error('Error fetching settings:', error);
+    console.error("Error fetching settings:", error);
     return NextResponse.json(
-      { error: 'Erro ao buscar configurações' },
+      { error: "Erro ao buscar configuracoes" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   return handleUpsert(request);
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   return handleUpsert(request);
 }
 
-async function handleUpsert(request: Request) {
+async function handleUpsert(request: NextRequest) {
   try {
     const body = await request.json();
-
-    // Support both single object and array of objects
     let entries: { key: string; value: string }[];
 
     const arrayValidation = settingsUpsertSchema.safeParse(body);
@@ -60,21 +95,19 @@ async function handleUpsert(request: Request) {
         entries = [singleValidation.data];
       } else {
         return NextResponse.json(
-          { error: 'Dados inválidos', details: 'Esperado objeto ou array de {key, value}' },
+          { error: "Dados invalidos", details: "Esperado objeto ou array de {key, value}" },
           { status: 400 }
         );
       }
     }
 
-    // Upsert each setting
     const results = await Promise.all(
       entries.map(async ({ key, value }) => {
-        const setting = await prisma.setting.upsert({
+        return prisma.setting.upsert({
           where: { key },
           update: { value },
           create: { key, value },
         });
-        return setting;
       })
     );
 
@@ -85,9 +118,9 @@ async function handleUpsert(request: Request) {
 
     return NextResponse.json(settingsMap);
   } catch (error) {
-    console.error('Error upserting settings:', error);
+    console.error("Error upserting settings:", error);
     return NextResponse.json(
-      { error: 'Erro ao salvar configurações' },
+      { error: "Erro ao salvar configuracoes" },
       { status: 500 }
     );
   }

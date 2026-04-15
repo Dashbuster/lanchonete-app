@@ -1,14 +1,11 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import crypto from "crypto";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { JWT } from "next-auth/jwt";
-
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/types";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -21,26 +18,51 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const email = credentials.email.trim().toLowerCase();
+        const password = credentials.password;
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            role: true,
+          },
         });
 
-        if (!user || !user.password) {
-          return null;
+        if (user?.password && (await compare(password, user.password))) {
+          return {
+            id: user.id,
+            name: user.name ?? "Administrador",
+            email: user.email,
+            role: user.role,
+          };
         }
 
-        const isValid = await compare(credentials.password, user.password);
+        const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+        const adminPassword = process.env.ADMIN_PASSWORD?.trim();
 
-        if (!isValid) {
-          return null;
+        if (
+          adminEmail &&
+          adminPassword &&
+          email === adminEmail &&
+          crypto.timingSafeEqual(
+            Buffer.from(password),
+            Buffer.from(adminPassword),
+          )
+        ) {
+          console.warn("Fallback admin auth used — hash the password in env.");
+          return {
+            id: "admin-fallback",
+            name: "Administrador",
+            email: adminEmail,
+            role: Role.ADMIN,
+          };
         }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role as Role,
-        };
+        return null;
       },
     }),
   ],

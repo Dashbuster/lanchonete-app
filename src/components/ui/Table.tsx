@@ -1,5 +1,5 @@
 import { cn } from "@/utils/cn"
-import { HTMLAttributes, forwardRef, TdHTMLAttributes, ThHTMLAttributes, TdHTMLAttributes as ThProps } from "react"
+import { HTMLAttributes, forwardRef, TdHTMLAttributes, ThHTMLAttributes } from "react"
 
 const Table = forwardRef<HTMLTableElement, HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (

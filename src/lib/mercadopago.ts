@@ -1,15 +1,45 @@
 import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
 
-const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+let _payment: Payment | null = null;
+let _preference: Preference | null = null;
+let _client: MercadoPagoConfig | null = null;
 
-if (!accessToken) {
-  throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not set");
+function getClient() {
+  const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+  if (!accessToken) {
+    throw new Error("MERCADO_PAGO_ACCESS_TOKEN is not set");
+  }
+  if (!_client) {
+    _client = new MercadoPagoConfig({ accessToken });
+  }
+  return _client;
 }
 
-const client = new MercadoPagoConfig({
-  accessToken,
-});
+export function getMpPayment() {
+  if (!_payment) {
+    _payment = new Payment(getClient());
+  }
+  return _payment;
+}
 
-export const mpClient = client;
-export const mpPayment = new Payment(client);
-export const mpPreference = new Preference(client);
+export function getMpPreference() {
+  if (!_preference) {
+    _preference = new Preference(getClient());
+  }
+  return _preference;
+}
+
+// Backwards-compatible re-exports (lazy)
+export const mpClient = {
+  get client() { return getClient(); },
+};
+export const mpPayment = new Proxy({} as Payment, {
+  get(_, prop) {
+    return Reflect.get(getMpPayment(), prop);
+  },
+});
+export const mpPreference = new Proxy({} as Preference, {
+  get(_, prop) {
+    return Reflect.get(getMpPreference(), prop);
+  },
+});

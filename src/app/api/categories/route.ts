@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { categorySchema } from '@/lib/zod';
+import { requireAdminAuth } from '@/lib/api-auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   try {
     const categories = await prisma.category.findMany({
       orderBy: { order: 'asc' },
@@ -23,7 +26,9 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   try {
     const body = await request.json();
     const validation = categorySchema.safeParse(body);

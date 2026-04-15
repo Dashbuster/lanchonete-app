@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { categorySchema } from '@/lib/zod';
+import { requireAdminAuth } from '@/lib/api-auth';
 
 interface Params {
   params: { id: string };
 }
 
-export async function GET(_request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   try {
     if (!params?.id) {
       return NextResponse.json(
@@ -42,7 +45,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
   }
 }
 
-export async function PATCH(request: Request, { params }: Params) {
+export async function PATCH(request: NextRequest, { params }: Params) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   try {
     if (!params?.id) {
       return NextResponse.json(
@@ -95,7 +100,9 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const auth = await requireAdminAuth(request);
+  if (!auth.success) return auth.response;
   try {
     if (!params?.id) {
       return NextResponse.json(
@@ -112,6 +119,17 @@ export async function DELETE(_request: Request, { params }: Params) {
       return NextResponse.json(
         { error: 'Categoria não encontrada' },
         { status: 404 }
+      );
+    }
+
+    const productCount = await prisma.product.count({
+      where: { categoryId: params.id },
+    });
+
+    if (productCount > 0) {
+      return NextResponse.json(
+        { error: `Esta categoria possui ${productCount} produto(s) vinculado(s). Remova-os antes de excluir.` },
+        { status: 400 }
       );
     }
 

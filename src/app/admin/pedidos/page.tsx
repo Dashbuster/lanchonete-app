@@ -25,18 +25,17 @@ interface OrderItem {
   id: string
   product: { name: string; image: string | null }
   quantity: number
-  unitPrice: number
-  observations: string | null
-  addons: { name: string; price: number }[]
+  price: number
+  addons: { id: string; name: string; price: number }[]
+  observations?: string
 }
 
 interface OrderType {
   id: string
-  number: number
   status: OrderStatus
-  customerName: string
+  customerName: string | null
   customerPhone: string | null
-  customerAddress: string | null
+  address: string | null
   subtotal: number
   deliveryFee: number
   total: number
@@ -113,181 +112,6 @@ const FILTER_LABELS: Record<OrderFilter, string> = {
   [OrderStatus.CANCELLED]: "Cancelados",
 }
 
-// ─── Mock Data ──────────────────────────────────────────────────────
-
-const mockOrders: OrderType[] = [
-  {
-    id: "1",
-    number: 1042,
-    status: OrderStatus.PENDING,
-    customerName: "Joao Silva",
-    customerPhone: "(11) 99999-1234",
-    customerAddress: "Rua das Flores, 123",
-    subtotal: 39.9,
-    deliveryFee: 6.0,
-    total: 45.9,
-    paymentMethod: "PIX",
-    items: [
-      { id: "i1", product: { name: "X-Bacon", image: null }, quantity: 2, unitPrice: 18.5, observations: "Sem cebola", addons: [{ name: "Bacon extra", price: 3.0 }] },
-      { id: "i2", product: { name: "Coca-Cola 350ml", image: null }, quantity: 1, unitPrice: 6.0, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T10:30:00Z",
-  },
-  {
-    id: "2",
-    number: 1041,
-    status: OrderStatus.CONFIRMED,
-    customerName: "Maria Santos",
-    customerPhone: "(11) 98888-5678",
-    customerAddress: "Av. Paulista, 456",
-    subtotal: 28.5,
-    deliveryFee: 4.0,
-    total: 32.5,
-    paymentMethod: "CREDIT_CARD",
-    items: [
-      { id: "i3", product: { name: "X-Salada", image: null }, quantity: 1, unitPrice: 15.5, observations: null, addons: [] },
-      { id: "i4", product: { name: "Batata Frita P", image: null }, quantity: 1, unitPrice: 13.0, observations: "Bem crocante", addons: [] },
-    ],
-    createdAt: "2026-04-06T10:15:00Z",
-  },
-  {
-    id: "3",
-    number: 1040,
-    status: OrderStatus.PREPARING,
-    customerName: "Carlos Oliveira",
-    customerPhone: "(11) 97777-9012",
-    customerAddress: null,
-    subtotal: 58.8,
-    deliveryFee: 9.0,
-    total: 67.8,
-    paymentMethod: "PIX",
-    items: [
-      { id: "i5", product: { name: "X-Tudo", image: null }, quantity: 2, unitPrice: 22.0, observations: "Molho a parte", addons: [{ name: "Cheddar extra", price: 3.5 }, { name: "Bacon extra", price: 3.0 }] },
-      { id: "i6", product: { name: "Milk Shake", image: null }, quantity: 1, unitPrice: 12.8, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T10:00:00Z",
-  },
-  {
-    id: "4",
-    number: 1039,
-    status: OrderStatus.READY,
-    customerName: "Ana Pereira",
-    customerPhone: "(11) 96666-3456",
-    customerAddress: "Rua Augusta, 789",
-    subtotal: 22.9,
-    deliveryFee: 6.0,
-    total: 28.9,
-    paymentMethod: "CASH",
-    items: [
-      { id: "i7", product: { name: "Cachorro Quente", image: null }, quantity: 1, unitPrice: 14.9, observations: null, addons: [] },
-      { id: "i8", product: { name: "Guarana 350ml", image: null }, quantity: 1, unitPrice: 8.0, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T09:45:00Z",
-  },
-  {
-    id: "5",
-    number: 1038,
-    status: OrderStatus.DELIVERED,
-    customerName: "Pedro Costa",
-    customerPhone: "(11) 95555-7890",
-    customerAddress: "Rua Consolacao, 321",
-    subtotal: 48.0,
-    deliveryFee: 7.0,
-    total: 55.0,
-    paymentMethod: "DEBIT_CARD",
-    items: [
-      { id: "i9", product: { name: "Combo Familiar", image: null }, quantity: 1, unitPrice: 48.0, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T09:30:00Z",
-  },
-  {
-    id: "6",
-    number: 1037,
-    status: OrderStatus.DELIVERED,
-    customerName: "Lucia Ferreira",
-    customerPhone: "(11) 94444-1234",
-    customerAddress: "Rua Sao Bento, 654",
-    subtotal: 35.2,
-    deliveryFee: 6.0,
-    total: 41.2,
-    paymentMethod: "PIX",
-    items: [
-      { id: "i10", product: { name: "Acai 300ml", image: null }, quantity: 1, unitPrice: 22.0, observations: "Com granola e banana", addons: [{ name: "Leite em po", price: 2.0 }, { name: "Paçoca", price: 2.0 }] },
-      { id: "i11", product: { name: "Suco Natural", image: null }, quantity: 1, unitPrice: 11.2, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T09:15:00Z",
-  },
-  {
-    id: "7",
-    number: 1036,
-    status: OrderStatus.CANCELLED,
-    customerName: "Roberto Lima",
-    customerPhone: "(11) 93333-5678",
-    customerAddress: "Rua Oscar Freire, 100",
-    subtotal: 15.9,
-    deliveryFee: 4.0,
-    total: 19.9,
-    paymentMethod: "CREDIT_CARD",
-    items: [
-      { id: "i12", product: { name: "Pastel de Carne", image: null }, quantity: 2, unitPrice: 7.95, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T09:00:00Z",
-  },
-  {
-    id: "8",
-    number: 1035,
-    status: OrderStatus.DELIVERED,
-    customerName: "Fernanda Souza",
-    customerPhone: "(11) 92222-9012",
-    customerAddress: "Rua Haddock Lobo, 200",
-    subtotal: 65.5,
-    deliveryFee: 8.0,
-    total: 73.5,
-    paymentMethod: "PIX",
-    items: [
-      { id: "i13", product: { name: "Pizza Broto", image: null }, quantity: 1, unitPrice: 35.0, observations: null, addons: [] },
-      { id: "i14", product: { name: "Coca-Cola 2L", image: null }, quantity: 1, unitPrice: 12.5, observations: null, addons: [] },
-      { id: "i15", product: { name: "Batata Frita G", image: null }, quantity: 1, unitPrice: 18.0, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T08:45:00Z",
-  },
-  {
-    id: "9",
-    number: 1034,
-    status: OrderStatus.DELIVERED,
-    customerName: "Marcos Almeida",
-    customerPhone: "(11) 91111-3456",
-    customerAddress: "Rua Bela Cintra, 500",
-    subtotal: 31.7,
-    deliveryFee: 5.0,
-    total: 36.7,
-    paymentMethod: "CASH",
-    items: [
-      { id: "i16", product: { name: "X-Frango", image: null }, quantity: 1, unitPrice: 17.5, observations: "Sem alface", addons: [] },
-      { id: "i17", product: { name: "Suco de Laranja", image: null }, quantity: 1, unitPrice: 10.0, observations: null, addons: [] },
-      { id: "i18", product: { name: "Torrada", image: null }, quantity: 1, unitPrice: 4.2, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T08:30:00Z",
-  },
-  {
-    id: "10",
-    number: 1033,
-    status: OrderStatus.DELIVERED,
-    customerName: "Patricia Rocha",
-    customerPhone: "(11) 90000-7890",
-    customerAddress: "Rua Pamplona, 150",
-    subtotal: 46.4,
-    deliveryFee: 6.0,
-    total: 52.4,
-    paymentMethod: "PIX",
-    items: [
-      { id: "i19", product: { name: "X-Picao", image: null }, quantity: 2, unitPrice: 20.0, observations: null, addons: [{ name: "Queijo extra", price: 3.2 }] },
-      { id: "i20", product: { name: "Refrigerante Lata", image: null }, quantity: 2, unitPrice: 6.0, observations: null, addons: [] },
-    ],
-    createdAt: "2026-04-06T08:15:00Z",
-  },
-]
-
 // ─── Helpers ────────────────────────────────────────────────────────
 
 function formatCurrency(value: number): string {
@@ -326,18 +150,21 @@ export default function PedidosPage() {
   const [filter, setFilter] = useState<OrderFilter>("ALL")
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
   const [updating, setUpdating] = useState<string | null>(null)
+  const [requestError, setRequestError] = useState<string | null>(null)
 
   const fetchOrders = useCallback(async () => {
     try {
+      setRequestError(null)
       const res = await fetch("/api/orders")
       if (res.ok) {
         const json = await res.json()
         setOrders(json)
       } else {
-        setOrders(mockOrders)
+        throw new Error("Nao foi possivel carregar os pedidos.")
       }
     } catch {
-      setOrders(mockOrders)
+      setOrders([])
+      setRequestError("Erro ao carregar pedidos do banco.")
     } finally {
       setLoading(false)
     }
@@ -378,8 +205,9 @@ export default function PedidosPage() {
     if (!nextStatus) return
 
     setUpdating(orderId)
+    setRequestError(null)
     try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
+      const res = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: nextStatus }),
@@ -387,15 +215,10 @@ export default function PedidosPage() {
       if (res.ok) {
         fetchOrders()
       } else {
-        // Update locally for mock
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o))
-        )
+        throw new Error("Nao foi possivel atualizar o pedido.")
       }
     } catch {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o))
-      )
+      setRequestError("Erro ao atualizar pedido. Nenhuma alteracao foi persistida.")
     } finally {
       setUpdating(null)
     }
@@ -403,8 +226,9 @@ export default function PedidosPage() {
 
   const handleCancelOrder = async (orderId: string) => {
     setUpdating(orderId)
+    setRequestError(null)
     try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
+      const res = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: OrderStatus.CANCELLED }),
@@ -412,14 +236,10 @@ export default function PedidosPage() {
       if (res.ok) {
         fetchOrders()
       } else {
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, status: OrderStatus.CANCELLED } : o))
-        )
+        throw new Error("Nao foi possivel cancelar o pedido.")
       }
     } catch {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: OrderStatus.CANCELLED } : o))
-      )
+      setRequestError("Erro ao cancelar pedido. Nenhuma alteracao foi persistida.")
     } finally {
       setUpdating(null)
     }
@@ -445,6 +265,12 @@ export default function PedidosPage() {
           Atualizar
         </Button>
       </div>
+
+      {requestError && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {requestError}
+        </div>
+      )}
 
       {/* Status Filters */}
       <div className="flex flex-wrap gap-2">
@@ -504,7 +330,7 @@ export default function PedidosPage() {
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </button>
                       </TableCell>
-                      <TableCell className="font-medium text-white">#{order.number}</TableCell>
+                      <TableCell className="font-medium text-white">#{order.id.slice(0, 8).toUpperCase()}</TableCell>
                       <TableCell>
                         <div>
                           <p className="text-white text-sm">{order.customerName}</p>
@@ -558,7 +384,7 @@ export default function PedidosPage() {
                               <div>
                                 <p className="text-xs text-dark-400 uppercase tracking-wide">Endereco</p>
                                 <p className="text-sm text-white mt-1">
-                                  {order.customerAddress || "Retirada no local"}
+                                  {order.address || "Retirada no local"}
                                 </p>
                               </div>
                               <div>
@@ -607,7 +433,7 @@ export default function PedidosPage() {
                                       )}
                                     </div>
                                     <span className="text-sm text-white font-medium flex-shrink-0">
-                                      {formatCurrency(item.unitPrice * item.quantity)}
+                                      {formatCurrency(item.price * item.quantity)}
                                     </span>
                                   </div>
                                 ))}
