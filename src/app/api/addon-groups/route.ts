@@ -5,8 +5,6 @@ import { requireAdminAuth } from '@/lib/api-auth';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdminAuth(request);
-  if (!auth.success) return auth.response;
   try {
     const { searchParams } = request.nextUrl;
     const productId = searchParams.get('productId');

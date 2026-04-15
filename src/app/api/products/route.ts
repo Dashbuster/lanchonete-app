@@ -15,8 +15,6 @@ const productCreateSchema = z.object({
 })
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdminAuth(request);
-  if (!auth.success) return auth.response;
   try {
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get("categoryId")

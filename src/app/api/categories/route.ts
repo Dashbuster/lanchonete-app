@@ -3,9 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { categorySchema } from '@/lib/zod';
 import { requireAdminAuth } from '@/lib/api-auth';
 
-export async function GET(request: NextRequest) {
-  const auth = await requireAdminAuth(request);
-  if (!auth.success) return auth.response;
+export async function GET() {
   try {
     const categories = await prisma.category.findMany({
       orderBy: { order: 'asc' },

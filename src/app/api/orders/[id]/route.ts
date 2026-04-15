@@ -33,8 +33,6 @@ function normalizePhone(phone: string | null | undefined) {
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
-  const auth = await requireAdminAuth(request);
-  if (!auth.success) return auth.response;
   try {
     if (!params?.id) {
       return NextResponse.json(
