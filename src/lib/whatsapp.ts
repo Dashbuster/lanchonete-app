@@ -41,6 +41,7 @@ interface WhatsAppConfig {
   instance: string
   token: string
   metaPhoneNumberId: string
+  storeName: string
 }
 
 interface SendMessageParams {
@@ -144,6 +145,7 @@ export class WhatsAppService {
       where: {
         key: {
           in: [
+            "store_name",
             "whatsapp_robot_enabled",
             "whatsapp_provider",
             "whatsapp_api_url",
@@ -166,12 +168,14 @@ export class WhatsAppService {
       instance: map.get("whatsapp_instance") || "",
       token: map.get("whatsapp_token") || "",
       metaPhoneNumberId: map.get("whatsapp_meta_phone_number_id") || "",
+      storeName: map.get("store_name")?.trim() || "Lanchonete",
     }
   }
 
   private static async sendMessage(params: SendMessageParams): Promise<WhatsAppSendResult | WhatsAppSkippedResult> {
     const config = await this.getConfig()
     const normalizedPhone = normalizePhone(params.phoneNumber)
+    const message = this.withStoreName(config.storeName, params.message)
 
     if (!normalizedPhone) {
       throw new Error("Informe um telefone valido para o WhatsApp.")
@@ -196,7 +200,7 @@ export class WhatsAppService {
           config,
           normalizedPhone,
           params.customerName,
-          params.message,
+          message,
           params.type,
           params.orderId
         )
@@ -205,7 +209,7 @@ export class WhatsAppService {
           config,
           normalizedPhone,
           params.customerName,
-          params.message,
+          message,
           params.type,
           params.orderId
         )
@@ -213,7 +217,7 @@ export class WhatsAppService {
         await this.sendViaMeta(
           config,
           normalizedPhone,
-          params.message
+          message
         )
       } else {
         await new Promise((resolve) => setTimeout(resolve, 300))
@@ -221,7 +225,7 @@ export class WhatsAppService {
 
       await this.recordLog({
         phoneNumber: normalizedPhone,
-        message: params.message,
+        message,
         type: params.type,
         orderId: params.orderId,
         status: "SENT",
@@ -236,7 +240,7 @@ export class WhatsAppService {
     } catch (error) {
       await this.recordLog({
         phoneNumber: normalizedPhone,
-        message: params.message,
+        message,
         type: params.type,
         orderId: params.orderId,
         status: "FAILED",
@@ -245,6 +249,10 @@ export class WhatsAppService {
 
       throw error
     }
+  }
+
+  private static withStoreName(storeName: string, message: string) {
+    return message.replaceAll("__STORE_NAME__", storeName.trim() || "Lanchonete")
   }
 
   private static async recordLog(params: {
@@ -440,7 +448,7 @@ export class WhatsAppService {
 
   private static generateOrderConfirmationMessage(params: OrderConfirmationParams) {
     return [
-      "Big Night - pedido confirmado",
+      "__STORE_NAME__ - pedido confirmado",
       "",
       `Ola ${params.customerName}!`,
       `Recebemos seu pedido ${params.orderCode}.`,
@@ -451,7 +459,7 @@ export class WhatsAppService {
 
   private static generatePaymentConfirmedMessage(params: PaymentConfirmedParams) {
     return [
-      "Big Night - pagamento aprovado",
+      "__STORE_NAME__ - pagamento aprovado",
       "",
       `${params.customerName}, o pagamento do pedido ${params.orderCode} foi confirmado.`,
       `Valor aprovado: ${formatCurrency(params.total)}`,
@@ -461,7 +469,7 @@ export class WhatsAppService {
 
   private static generateOutForDeliveryMessage(params: OutForDeliveryParams) {
     return [
-      "Big Night - pedido a caminho",
+      "__STORE_NAME__ - pedido a caminho",
       "",
       `${params.customerName}, o pedido ${params.orderCode} esta saindo para entrega.`,
       "Fique atento ao telefone e ao endereco informado.",
@@ -470,7 +478,7 @@ export class WhatsAppService {
 
   private static generateTestMessage() {
     return [
-      "Big Night - teste do robo",
+      "__STORE_NAME__ - teste do robo",
       "",
       "A integracao do WhatsApp foi configurada com sucesso.",
       "Se voce recebeu esta mensagem, o canal esta pronto para automacoes.",

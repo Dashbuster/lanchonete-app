@@ -5,11 +5,11 @@ import { Providers } from "@/components/shared/Providers"
 
 export const metadata: Metadata = {
   title: {
-    default: "Big Night | Pedidos Online",
-    template: "%s | Big Night",
+    default: "Pedidos Online",
+    template: "%s | Pedidos Online",
   },
   description:
-    "Site moderno para pedidos online de lanches, combos, bebidas e pagamentos da Big Night.",
+    "Site moderno para pedidos online de lanches, combos, bebidas e pagamentos.",
 }
 
 export default function RootLayout({

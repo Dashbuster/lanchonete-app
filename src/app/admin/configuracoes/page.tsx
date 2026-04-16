@@ -56,6 +56,7 @@ interface WhatsAppConfig {
 interface StoreSettings {
   name: string
   logo: string | null
+  description: string
   storeOpen: boolean
   dayHours: Record<string, DayHours>
   deliveryFee: number
@@ -96,6 +97,7 @@ const defaultPaymentMethods: PaymentMethod[] = [
 const mockSettings: StoreSettings = {
   name: "Lanchonete do Ze",
   logo: null,
+  description: "Os melhores lanches artesanais da cidade!",
   storeOpen: true,
   dayHours: createDefaultDayHours(),
   deliveryFee: 5,
@@ -267,6 +269,7 @@ export default function ConfiguracoesPage() {
       ...mockSettings,
       name: readSetting(data, "store_name", mockSettings.name, false),
       logo: "store_logo" in data ? data.store_logo || null : mockSettings.logo,
+      description: readSetting(data, "store_description", mockSettings.description),
       storeOpen: data.store_open ? data.store_open === "true" : mockSettings.storeOpen,
       dayHours: parseDayHours(data[dayHoursStorageKey]),
       deliveryFee: data.delivery_fee ? Number(data.delivery_fee) : mockSettings.deliveryFee,
@@ -377,6 +380,7 @@ export default function ConfiguracoesPage() {
       const payload = [
         { key: "store_name", value: settings.name },
         { key: "store_logo", value: settings.logo || "" },
+        { key: "store_description", value: settings.description },
         { key: "store_open", value: String(settings.storeOpen) },
         { key: dayHoursStorageKey, value: JSON.stringify(settings.dayHours) },
         { key: "delivery_fee", value: String(settings.deliveryFee) },
@@ -409,24 +413,23 @@ export default function ConfiguracoesPage() {
       })
 
       if (!res.ok) {
-        throw new Error("Nao foi possivel salvar as configuracoes.")
+        const data = await res.json().catch(() => null)
+        throw new Error(
+          data?.error || data?.details || "Nao foi possivel salvar as configuracoes."
+        )
       }
 
-      const savedData = (await res.json()) as Record<string, string>
-      setSettings((prev) =>
-        prev
-          ? mapSettingsFromApi({
-              ...savedData,
-              [dayHoursStorageKey]: JSON.stringify(prev.dayHours),
-            })
-          : prev
-      )
+      await res.json().catch(() => null)
 
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
       return true
-    } catch {
-      setError("Erro ao salvar configuracoes. Nenhuma alteracao foi persistida.")
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Erro ao salvar configuracoes. Nenhuma alteracao foi persistida."
+      )
       return false
     } finally {
       setSaving(false)
@@ -628,6 +631,16 @@ export default function ConfiguracoesPage() {
               size="small"
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-dark-300">Descricao da Loja</label>
+          <Textarea
+            value={settings.description}
+            onChange={(e) => setSettings((prev) => (prev ? { ...prev, description: e.target.value } : prev))}
+            placeholder="Texto exibido no rodape e em pontos publicos da loja"
+            className="min-h-[96px]"
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

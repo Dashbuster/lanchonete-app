@@ -9,6 +9,7 @@ type DayHours = {
 export type PublicSiteSettings = {
   storeName: string
   storeLogo: string | null
+  storeDescription: string
   storeOpen: boolean
   whatsapp: string
   instagramUrl: string
@@ -34,6 +35,7 @@ const defaultDayHours: DayHours = { open: "18:00", close: "23:00", isOpen: true 
 const defaultSettings: PublicSiteSettings = {
   storeName: "Lanchonete do Ze",
   storeLogo: null,
+  storeDescription: "Os melhores lanches artesanais da cidade!",
   storeOpen: true,
   whatsapp: "(11) 99999-0000",
   instagramUrl: "https://instagram.com/lanchonetedoze",
@@ -126,6 +128,7 @@ export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
     return {
       storeName: map.store_name?.trim() || defaultSettings.storeName,
       storeLogo: map.store_logo || null,
+      storeDescription: map.store_description?.trim() || defaultSettings.storeDescription,
       storeOpen: map.store_open ? map.store_open === "true" : true,
       whatsapp: map.whatsapp || defaultSettings.whatsapp,
       instagramUrl: map.instagram || defaultSettings.instagramUrl,

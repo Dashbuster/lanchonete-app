@@ -189,8 +189,7 @@ export function PublicShell({
                 {settings.storeName}
               </p>
               <p className="mt-3 max-w-xl text-sm leading-7 text-dark-200">
-                Confira o cardapio, monte seu pedido e acompanhe tudo em um fluxo
-                rapido, ligado ao painel administrativo.
+                {settings.storeDescription}
               </p>
             </div>
 
