@@ -123,18 +123,23 @@ const mockSettings: StoreSettings = {
 interface ImageUploadProps {
   value: string | null
   onChange: (value: string | null) => void
+  onUpload: (file: File) => Promise<void>
+  uploading?: boolean
   size?: "small" | "medium"
 }
 
-function ImageUpload({ value, onChange, size = "medium" }: ImageUploadProps) {
+function ImageUpload({ value, onChange, onUpload, uploading = false, size = "medium" }: ImageUploadProps) {
   const sizeClasses = size === "small" ? "w-24 h-24" : "w-32 h-32"
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => onChange(reader.result as string)
-    reader.readAsDataURL(file)
+
+    try {
+      await onUpload(file)
+    } finally {
+      e.target.value = ""
+    }
   }
 
   return (
@@ -144,11 +149,21 @@ function ImageUpload({ value, onChange, size = "medium" }: ImageUploadProps) {
           <img
             src={value}
             alt="Logo preview"
-            className={cn("rounded-lg object-cover border border-dark-600", sizeClasses)}
+            className={cn(
+              "rounded-lg object-cover border border-dark-600 transition-opacity",
+              uploading && "opacity-60",
+              sizeClasses
+            )}
           />
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/45">
+              <Loader2 className="w-5 h-5 animate-spin text-white" />
+            </div>
+          )}
           <button
             type="button"
             onClick={() => onChange(null)}
+            disabled={uploading}
             className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors"
           >
             <X className="w-3 h-3" />
@@ -158,12 +173,13 @@ function ImageUpload({ value, onChange, size = "medium" }: ImageUploadProps) {
         <label
           className={cn(
             "flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-dark-600 cursor-pointer hover:border-brand-500 transition-colors",
+            uploading && "cursor-wait opacity-70",
             sizeClasses
           )}
         >
-          <ImageIcon className="w-6 h-6 text-dark-400" />
-          <span className="mt-1 text-xs text-dark-400">Upload</span>
-          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+          {uploading ? <Loader2 className="w-6 h-6 animate-spin text-dark-200" /> : <ImageIcon className="w-6 h-6 text-dark-400" />}
+          <span className="mt-1 text-xs text-dark-400">{uploading ? "Enviando" : "Upload"}</span>
+          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={uploading} />
         </label>
       )}
     </div>
@@ -242,6 +258,7 @@ export default function ConfiguracoesPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [testingRobot, setTestingRobot] = useState(false)
   const [testStatus, setTestStatus] = useState<string | null>(null)
 
@@ -416,6 +433,33 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  const handleLogoUpload = async (file: File) => {
+    setUploadingLogo(true)
+    setError(null)
+
+    try {
+      const form = new FormData()
+      form.append("file", file)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: form,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Nao foi possivel enviar a logo.")
+      }
+
+      setSettings((prev) => (prev ? { ...prev, logo: data.url } : prev))
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Erro ao enviar a logo.")
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
   const handleRobotTest = async () => {
     if (!settings) return
     if (!settings.whatsappConfig.enabled) {
@@ -579,6 +623,8 @@ export default function ConfiguracoesPage() {
             <ImageUpload
               value={settings.logo}
               onChange={(val) => setSettings((prev) => (prev ? { ...prev, logo: val } : prev))}
+              onUpload={handleLogoUpload}
+              uploading={uploadingLogo}
               size="small"
             />
           </div>

@@ -8,16 +8,29 @@ const ALLOWED_SETTING_KEYS = [
   "min_order_value",
   "accepts_pickup",
   "store_open",
+  "store_day_hours",
   "payment_pix",
   "payment_credit_card",
   "payment_debit_card",
   "payment_cash",
   "payment_on_site",
+  "delivery_radius_km",
+  "delivery_region_label",
+  "delivery_region_center",
+  "delivery_region_notes",
+  "delivery_neighborhoods",
+  "whatsapp",
+  "instagram",
+  "whatsapp_robot_enabled",
+  "whatsapp_provider",
   "whatsapp_enabled",
   "whatsapp_mode",
   "whatsapp_api_url",
   "whatsapp_instance",
   "whatsapp_token",
+  "whatsapp_meta_phone_number_id",
+  "whatsapp_test_phone",
+  "whatsapp_phone",
   "whatsapp_api_key",
   "whatsapp_timeout",
   "whatsapp_retry_limit",
@@ -34,17 +47,14 @@ const settingKeySchema = z.string().refine(
   { message: `Chave de configuracao invalida. Chaves validas: ${ALLOWED_SETTING_KEYS.join(", ")}` }
 );
 
-const settingsUpsertSchema = z.array(
-  z.object({
-    key: settingKeySchema,
-    value: z.string(),
-  })
-);
-
-const singleSettingSchema = z.object({
-  key: z.string().min(1, "Chave e obrigatoria"),
+const settingEntrySchema = z.object({
+  key: settingKeySchema,
   value: z.string(),
 });
+
+const settingsUpsertSchema = z.array(settingEntrySchema);
+
+const singleSettingSchema = settingEntrySchema;
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdminAuth(request);
