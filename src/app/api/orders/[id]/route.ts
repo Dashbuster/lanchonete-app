@@ -153,6 +153,22 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (
       status === OrderStatus.READY &&
       existing.status !== OrderStatus.READY &&
+      customerPhone
+    ) {
+      WhatsAppService.sendOrderReady({
+        orderId: order.id,
+        customerPhone,
+        customerName,
+        orderCode,
+        isPickup: !order.address,
+      }).catch((error) => {
+        console.error("Falha ao enviar aviso de pedido pronto:", error)
+      })
+    }
+
+    if (
+      status === OrderStatus.DELIVERED &&
+      existing.status !== OrderStatus.DELIVERED &&
       order.address &&
       customerPhone
     ) {

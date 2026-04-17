@@ -115,15 +115,17 @@ async function handleUpsert(request: NextRequest) {
       }
     }
 
-    const results = await Promise.all(
-      entries.map(async ({ key, value }) => {
-        return prisma.setting.upsert({
-          where: { key },
-          update: { value },
-          create: { key, value },
-        });
-      })
-    );
+    const results = [];
+
+    for (const { key, value } of entries) {
+      const setting = await prisma.setting.upsert({
+        where: { key },
+        update: { value },
+        create: { key, value },
+      });
+
+      results.push(setting);
+    }
 
     const settingsMap: Record<string, string> = {};
     for (const setting of results) {

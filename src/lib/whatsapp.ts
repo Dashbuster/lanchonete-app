@@ -4,6 +4,7 @@ type WhatsAppProvider = "SIMULATED" | "WEBHOOK" | "EVOLUTION" | "META"
 type WhatsAppMessageType =
   | "ORDER_CONFIRMATION"
   | "PAYMENT_CONFIRMED"
+  | "ORDER_READY"
   | "OUT_FOR_DELIVERY"
   | "TEST"
 
@@ -28,6 +29,12 @@ interface PaymentConfirmedParams extends BaseMessageParams {
 interface OutForDeliveryParams extends BaseMessageParams {
   orderId: string
   orderCode: string
+}
+
+interface OrderReadyParams extends BaseMessageParams {
+  orderId: string
+  orderCode: string
+  isPickup?: boolean
 }
 
 interface RobotTestParams {
@@ -118,6 +125,16 @@ export class WhatsAppService {
       orderId: params.orderId,
       customerName: params.customerName,
       message: this.generatePaymentConfirmedMessage(params),
+    })
+  }
+
+  static async sendOrderReady(params: OrderReadyParams) {
+    return this.sendMessage({
+      type: "ORDER_READY",
+      phoneNumber: params.customerPhone,
+      orderId: params.orderId,
+      customerName: params.customerName,
+      message: this.generateOrderReadyMessage(params),
     })
   }
 
@@ -473,6 +490,24 @@ export class WhatsAppService {
       "",
       `${params.customerName}, o pedido ${params.orderCode} esta saindo para entrega.`,
       "Fique atento ao telefone e ao endereco informado.",
+    ].join("\n")
+  }
+
+  private static generateOrderReadyMessage(params: OrderReadyParams) {
+    if (params.isPickup) {
+      return [
+        "__STORE_NAME__ - pedido pronto",
+        "",
+        `${params.customerName}, o pedido ${params.orderCode} esta pronto para retirada.`,
+        "Quando chegar, informe seu nome ou o codigo do pedido no balcao.",
+      ].join("\n")
+    }
+
+    return [
+      "__STORE_NAME__ - pedido pronto",
+      "",
+      `${params.customerName}, o pedido ${params.orderCode} esta pronto.`,
+      "Em breve ele saira para entrega e vamos te avisar.",
     ].join("\n")
   }
 
