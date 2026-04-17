@@ -24,18 +24,18 @@ import { Reveal } from "@/components/ui/Reveal"
 import type { PublicSiteSettings } from "@/lib/public-settings"
 
 function getHoursText(settings: PublicSiteSettings) {
-  const openDays = Object.values(settings.dayHours).filter((day) => day.isOpen)
-  if (!openDays.length) return "Consulte o horario da loja no atendimento."
-
   const uniqueRanges = Array.from(
-    new Set(openDays.map((day) => `${day.open} as ${day.close}`))
+    new Set(
+      Object.values(settings.dayHours)
+        .filter((day) => day.isOpen)
+        .map((day) => `${day.open} as ${day.close}`)
+    )
   )
 
-  if (uniqueRanges.length === 1) {
-    return `Todos os dias: ${uniqueRanges[0]}.`
-  }
-
-  return `Horarios configurados no painel: ${uniqueRanges.join(" / ")}.`
+  if (!uniqueRanges.length) return "Consulte o horario da loja no atendimento."
+  if (uniqueRanges.length === 1) return `Todos os dias: ${uniqueRanges[0]}.`
+  if (uniqueRanges.length === 2) return `${uniqueRanges[0]} / ${uniqueRanges[1]}.`
+  return `Horarios configurados: ${uniqueRanges.join(" / ")}.`
 }
 
 interface Category {
@@ -204,7 +204,7 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
             <div className="relative flex flex-col gap-8">
               <div className="animate-fade-in-up inline-flex w-fit items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-brand-100 backdrop-blur-sm stagger-1">
                 <Flame className="h-4 w-4 text-brand-300" />
-                Feito com fogo & carinho
+                {initialSettings.heroBadge}
               </div>
 
               <div className="animate-fade-in-up max-w-2xl stagger-2">
@@ -212,16 +212,14 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                   className="relative text-5xl font-black uppercase leading-none text-white sm:text-6xl lg:text-7xl"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
-                  hamburguer
+                  {initialSettings.heroTitle}
                   <br />
                   <span className="bg-gradient-to-r from-brand-300 via-brand-400 to-amber-400 bg-clip-text text-transparent animate-gradient">
-                    no ponto certo
+                    {initialSettings.heroHighlight}
                   </span>
                 </h1>
                 <p className="mt-5 max-w-xl text-sm leading-7 text-dark-100 sm:text-base">
-                  Monte combos, escolha extras, pague do seu jeito e acompanhe
-                  seu pedido em uma experiencia rapida, moderna e pensada para
-                  vender.
+                  {initialSettings.heroDescription}
                 </p>
               </div>
 

@@ -22,6 +22,26 @@ function normalizePhone(phone: string | null | undefined) {
   return digits.length >= 10 ? digits : null
 }
 
+function describeSelectionRule(group: {
+  name: string
+  minSelect: number
+  maxSelect: number
+}) {
+  if (group.minSelect > 0 && group.maxSelect > 0) {
+    return `entre ${group.minSelect} e ${group.maxSelect} item(ns)`
+  }
+
+  if (group.minSelect > 0) {
+    return `ao menos ${group.minSelect} item(ns)`
+  }
+
+  if (group.maxSelect > 0) {
+    return `ate ${group.maxSelect} item(ns)`
+  }
+
+  return "uma quantidade valida de itens"
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdminAuth(request);
   if (!auth.success) return auth.response;
@@ -89,6 +109,7 @@ export async function POST(request: NextRequest) {
     const customerName = validation.data.customerName.trim()
     const customerPhone = validation.data.customerPhone?.trim() || null
     const normalizedCustomerPhone = normalizePhone(customerPhone)
+    const orderType = validation.data.orderType
     const address = validation.data.address?.trim() || null
     const { items, paymentMethod } = validation.data
     const changeFor = validation.data.changeFor
@@ -154,7 +175,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!address && !acceptsPickup) {
+    if (orderType === "delivery" && !address) {
+      return NextResponse.json(
+        { error: "Informe o endereco para pedidos de entrega" },
+        { status: 400 }
+      )
+    }
+
+    if (orderType === "pickup" && !acceptsPickup) {
       return NextResponse.json(
         { error: "A loja nao esta aceitando retirada no momento" },
         { status: 400 }
@@ -173,12 +201,24 @@ export async function POST(request: NextRequest) {
       new Set(items.flatMap((item) => item.addonIds))
     )
 
-    const [products, addons] = await Promise.all([
+    const [products, addonGroups, addons] = await Promise.all([
       prisma.product.findMany({
         where: {
           id: {
             in: productIds,
           },
+        },
+      }),
+      prisma.addonGroup.findMany({
+        where: {
+          OR: [
+            { productId: null },
+            {
+              productId: {
+                in: productIds,
+              },
+            },
+          ],
         },
       }),
       addonIds.length
@@ -193,6 +233,7 @@ export async function POST(request: NextRequest) {
     ])
 
     const productMap = new Map(products.map((product) => [product.id, product]))
+    const addonGroupMap = new Map(addonGroups.map((group) => [group.id, group]))
     const addonMap = new Map(addons.map((addon) => [addon.id, addon]))
 
     let subtotal = 0
@@ -215,8 +256,46 @@ export async function POST(request: NextRequest) {
           throw new Error(`Complemento nao encontrado: ${addonId}`)
         }
 
+        const group = addonGroupMap.get(addon.groupId)
+
+        if (!group) {
+          throw new Error(`Grupo de complemento nao encontrado para: ${addon.name}`)
+        }
+
+        if (group.productId && group.productId !== product.id) {
+          throw new Error(`Complemento invalido para o produto ${product.name}: ${addon.name}`)
+        }
+
         return addon
       })
+
+      const selectedCountByGroup = selectedAddons.reduce<Record<string, number>>(
+        (acc, addon) => {
+          acc[addon.groupId] = (acc[addon.groupId] || 0) + 1
+          return acc
+        },
+        {}
+      )
+
+      const applicableGroups = addonGroups.filter(
+        (group) => group.productId === null || group.productId === product.id
+      )
+
+      for (const group of applicableGroups) {
+        const selectedCount = selectedCountByGroup[group.id] || 0
+
+        if (group.required && selectedCount < group.minSelect) {
+          throw new Error(
+            `Selecione ${describeSelectionRule(group)} em ${group.name} para o produto ${product.name}`
+          )
+        }
+
+        if (group.maxSelect > 0 && selectedCount > group.maxSelect) {
+          throw new Error(
+            `Selecione ${describeSelectionRule(group)} em ${group.name} para o produto ${product.name}`
+          )
+        }
+      }
 
       const addonsPrice = selectedAddons.reduce(
         (sum, addon) => sum + Number(addon.price),
@@ -252,7 +331,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const deliveryCost = address ? roundMoney(deliveryFee) : 0
+    const deliveryCost = orderType === "delivery" ? roundMoney(deliveryFee) : 0
     const total = roundMoney(subtotal + deliveryCost)
 
     const order = await prisma.order.create({

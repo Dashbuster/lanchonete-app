@@ -10,6 +10,10 @@ export type PublicSiteSettings = {
   storeName: string
   storeLogo: string | null
   storeDescription: string
+  heroBadge: string
+  heroTitle: string
+  heroHighlight: string
+  heroDescription: string
   storeOpen: boolean
   whatsapp: string
   instagramUrl: string
@@ -36,6 +40,11 @@ const defaultSettings: PublicSiteSettings = {
   storeName: "Lanchonete do Ze",
   storeLogo: null,
   storeDescription: "Os melhores lanches artesanais da cidade!",
+  heroBadge: "Feito com fogo & carinho",
+  heroTitle: "Hamburguer",
+  heroHighlight: "no ponto certo",
+  heroDescription:
+    "Monte combos, escolha extras, pague do seu jeito e acompanhe seu pedido em uma experiencia rapida, moderna e pensada para vender.",
   storeOpen: true,
   whatsapp: "(11) 99999-0000",
   instagramUrl: "https://instagram.com/lanchonetedoze",
@@ -129,6 +138,10 @@ export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
       storeName: map.store_name?.trim() || defaultSettings.storeName,
       storeLogo: map.store_logo || null,
       storeDescription: map.store_description?.trim() || defaultSettings.storeDescription,
+      heroBadge: map.hero_badge?.trim() || defaultSettings.heroBadge,
+      heroTitle: map.hero_title?.trim() || defaultSettings.heroTitle,
+      heroHighlight: map.hero_highlight?.trim() || defaultSettings.heroHighlight,
+      heroDescription: map.hero_description?.trim() || defaultSettings.heroDescription,
       storeOpen: map.store_open ? map.store_open === "true" : true,
       whatsapp: map.whatsapp || defaultSettings.whatsapp,
       instagramUrl: map.instagram || defaultSettings.instagramUrl,

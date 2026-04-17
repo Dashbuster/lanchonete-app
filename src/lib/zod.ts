@@ -22,6 +22,7 @@ export type ProductInput = z.infer<typeof productSchema>
 export const orderSchema = z.object({
   customerName: z.string().min(1, "Nome do cliente é obrigatório"),
   customerPhone: z.string().optional().nullable(),
+  orderType: z.enum(["delivery", "pickup"]).default("delivery"),
   address: z.string().optional().nullable(),
   items: z
     .array(

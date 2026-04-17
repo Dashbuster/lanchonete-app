@@ -152,6 +152,7 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
         body: JSON.stringify({
           customerName: customerName.trim(),
           customerPhone: customerPhone.trim(),
+          orderType,
           address: orderType === "delivery" ? address.trim() : null,
           paymentMethod,
           changeFor: changeFor ? Number(changeFor.replace(",", ".")) : null,
@@ -215,7 +216,7 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
           </div>
           <h1 className="mt-6 text-3xl font-black text-white">Carrinho vazio</h1>
           <p className="mt-3 text-sm leading-7 text-dark-200">
-            Adicione itens ao carrinho antes de seguir para o checkout.
+            Adicione itens ao carrinho da {settings.storeName} antes de seguir para o checkout.
           </p>
           <Button className="mt-6" onClick={() => router.push("/")}>
             Voltar ao cardapio
@@ -238,8 +239,8 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
           </p>
           <h1 className="mt-2 text-4xl font-black text-white">Pedido recebido</h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-dark-100">
-            Seu pedido foi criado e esta pronto para acompanhamento. O codigo do
-            pedido e <span className="font-bold text-white">{finishedOrderId}</span>.
+            Seu pedido na {settings.storeName} foi criado e esta pronto para acompanhamento.
+            O codigo do pedido e <span className="font-bold text-white">{finishedOrderId}</span>.
           </p>
 
           {paymentMethod === "PIX" && (
@@ -251,7 +252,7 @@ export function CheckoutClient({ settings }: { settings: PublicSiteSettings }) {
 
               <p className="mt-3 text-sm leading-7 text-dark-200">
                 Copie o codigo abaixo no app do banco. Se o provedor retornar um
-                link de pagamento, ele tambem aparecera aqui.
+                link de pagamento para a {settings.storeName}, ele tambem aparecera aqui.
               </p>
 
               {pixQrBase64 && (

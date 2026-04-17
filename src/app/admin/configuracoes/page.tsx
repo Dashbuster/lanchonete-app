@@ -57,6 +57,10 @@ interface StoreSettings {
   name: string
   logo: string | null
   description: string
+  heroBadge: string
+  heroTitle: string
+  heroHighlight: string
+  heroDescription: string
   storeOpen: boolean
   dayHours: Record<string, DayHours>
   deliveryFee: number
@@ -98,6 +102,11 @@ const mockSettings: StoreSettings = {
   name: "Lanchonete do Ze",
   logo: null,
   description: "Os melhores lanches artesanais da cidade!",
+  heroBadge: "Feito com fogo & carinho",
+  heroTitle: "Hamburguer",
+  heroHighlight: "no ponto certo",
+  heroDescription:
+    "Monte combos, escolha extras, pague do seu jeito e acompanhe seu pedido em uma experiencia rapida, moderna e pensada para vender.",
   storeOpen: true,
   dayHours: createDefaultDayHours(),
   deliveryFee: 5,
@@ -270,6 +279,10 @@ export default function ConfiguracoesPage() {
       name: readSetting(data, "store_name", mockSettings.name, false),
       logo: "store_logo" in data ? data.store_logo || null : mockSettings.logo,
       description: readSetting(data, "store_description", mockSettings.description),
+      heroBadge: readSetting(data, "hero_badge", mockSettings.heroBadge),
+      heroTitle: readSetting(data, "hero_title", mockSettings.heroTitle),
+      heroHighlight: readSetting(data, "hero_highlight", mockSettings.heroHighlight),
+      heroDescription: readSetting(data, "hero_description", mockSettings.heroDescription),
       storeOpen: data.store_open ? data.store_open === "true" : mockSettings.storeOpen,
       dayHours: parseDayHours(data[dayHoursStorageKey]),
       deliveryFee: data.delivery_fee ? Number(data.delivery_fee) : mockSettings.deliveryFee,
@@ -381,6 +394,10 @@ export default function ConfiguracoesPage() {
         { key: "store_name", value: settings.name },
         { key: "store_logo", value: settings.logo || "" },
         { key: "store_description", value: settings.description },
+        { key: "hero_badge", value: settings.heroBadge },
+        { key: "hero_title", value: settings.heroTitle },
+        { key: "hero_highlight", value: settings.heroHighlight },
+        { key: "hero_description", value: settings.heroDescription },
         { key: "store_open", value: String(settings.storeOpen) },
         { key: dayHoursStorageKey, value: JSON.stringify(settings.dayHours) },
         { key: "delivery_fee", value: String(settings.deliveryFee) },
@@ -640,6 +657,47 @@ export default function ConfiguracoesPage() {
             onChange={(e) => setSettings((prev) => (prev ? { ...prev, description: e.target.value } : prev))}
             placeholder="Texto exibido no rodape e em pontos publicos da loja"
             className="min-h-[96px]"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-dark-300">Selo do Hero</label>
+            <Input
+              value={settings.heroBadge}
+              onChange={(e) => setSettings((prev) => (prev ? { ...prev, heroBadge: e.target.value } : prev))}
+              placeholder="Ex.: Feito com fogo & carinho"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-dark-300">Titulo do Hero</label>
+            <Input
+              value={settings.heroTitle}
+              onChange={(e) => setSettings((prev) => (prev ? { ...prev, heroTitle: e.target.value } : prev))}
+              placeholder="Ex.: Hamburguer"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-dark-300">Destaque do Hero</label>
+            <Input
+              value={settings.heroHighlight}
+              onChange={(e) => setSettings((prev) => (prev ? { ...prev, heroHighlight: e.target.value } : prev))}
+              placeholder="Ex.: no ponto certo"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-dark-300">Descricao do Hero</label>
+          <Textarea
+            value={settings.heroDescription}
+            onChange={(e) => setSettings((prev) => (prev ? { ...prev, heroDescription: e.target.value } : prev))}
+            placeholder="Texto principal exibido na capa da home"
+            className="min-h-[110px]"
           />
         </div>
 

@@ -34,21 +34,18 @@ function formatPhone(phone: string) {
 }
 
 function getHoursSummary(settings: PublicSiteSettings) {
-  const openDays = Object.values(settings.dayHours).filter((day) => day.isOpen)
-  if (!openDays.length) return "Consulte o horario da loja no atendimento."
-
   const uniqueRanges = Array.from(
-    new Set(openDays.map((day) => `${day.open} as ${day.close}`))
+    new Set(
+      Object.values(settings.dayHours)
+        .filter((day) => day.isOpen)
+        .map((day) => `${day.open} as ${day.close}`)
+    )
   )
 
-  if (uniqueRanges.length === 1) {
-    return `Todos os dias: ${uniqueRanges[0]}`
-  }
-
-  return openDays
-    .slice(0, 2)
-    .map((day) => `${day.open} as ${day.close}`)
-    .join(" / ")
+  if (!uniqueRanges.length) return "Consulte o horario da loja no atendimento."
+  if (uniqueRanges.length === 1) return `Todos os dias: ${uniqueRanges[0]}`
+  if (uniqueRanges.length === 2) return `${uniqueRanges[0]} / ${uniqueRanges[1]}`
+  return `Faixas: ${uniqueRanges.join(" / ")}`
 }
 
 export function PublicShell({
