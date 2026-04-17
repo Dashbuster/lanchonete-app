@@ -143,7 +143,7 @@ export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
       heroHighlight: map.hero_highlight?.trim() || defaultSettings.heroHighlight,
       heroDescription: map.hero_description?.trim() || defaultSettings.heroDescription,
       storeOpen: map.store_open ? map.store_open === "true" : true,
-      whatsapp: map.whatsapp || defaultSettings.whatsapp,
+      whatsapp: map.whatsapp_phone || map.whatsapp || defaultSettings.whatsapp,
       instagramUrl: map.instagram || defaultSettings.instagramUrl,
       deliveryFee: Number.isFinite(deliveryFee) ? deliveryFee : defaultSettings.deliveryFee,
       minOrderValue: Number.isFinite(minOrderValue) ? minOrderValue : defaultSettings.minOrderValue,

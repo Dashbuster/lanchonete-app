@@ -289,7 +289,11 @@ export default function ConfiguracoesPage() {
       deliveryRadius: data.delivery_radius_km ? Number(data.delivery_radius_km) : mockSettings.deliveryRadius,
       minOrderValue: data.min_order_value ? Number(data.min_order_value) : mockSettings.minOrderValue,
       acceptsPickup: data.accepts_pickup ? data.accepts_pickup === "true" : mockSettings.acceptsPickup,
-      whatsapp: readSetting(data, "whatsapp", mockSettings.whatsapp),
+      whatsapp: readSetting(
+        data,
+        "whatsapp",
+        readSetting(data, "whatsapp_phone", mockSettings.whatsapp)
+      ),
       instagramUrl: readSetting(data, "instagram", mockSettings.instagramUrl),
       regionLabel: readSetting(data, "delivery_region_label", mockSettings.regionLabel),
       regionCenter: readSetting(data, "delivery_region_center", mockSettings.regionCenter),
@@ -405,6 +409,7 @@ export default function ConfiguracoesPage() {
         { key: "min_order_value", value: String(settings.minOrderValue) },
         { key: "accepts_pickup", value: String(settings.acceptsPickup) },
         { key: "whatsapp", value: settings.whatsapp },
+        { key: "whatsapp_phone", value: settings.whatsapp },
         { key: "instagram", value: settings.instagramUrl },
         { key: "delivery_region_label", value: settings.regionLabel },
         { key: "delivery_region_center", value: settings.regionCenter },
@@ -703,7 +708,7 @@ export default function ConfiguracoesPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-dark-300">WhatsApp comercial</label>
+            <label className="block text-sm font-medium text-dark-300">WhatsApp da loja</label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
               <Input
@@ -713,6 +718,9 @@ export default function ConfiguracoesPage() {
                 className="pl-10"
               />
             </div>
+            <p className="text-xs text-dark-400">
+              Esse numero aparece na tela inicial do site e no rodape publico.
+            </p>
           </div>
 
           <div className="space-y-2">

@@ -6,6 +6,7 @@ import {
   Clock3,
   Flame,
   MapPin,
+  Phone,
   Search,
   ShieldCheck,
   Sparkles,
@@ -36,6 +37,11 @@ function getHoursText(settings: PublicSiteSettings) {
   if (uniqueRanges.length === 1) return `Todos os dias: ${uniqueRanges[0]}.`
   if (uniqueRanges.length === 2) return `${uniqueRanges[0]} / ${uniqueRanges[1]}.`
   return `Horarios configurados: ${uniqueRanges.join(" / ")}.`
+}
+
+function formatWhatsAppHref(phone: string) {
+  const digits = phone.replace(/\D/g, "")
+  return digits ? `https://wa.me/${digits}` : "#"
 }
 
 interface Category {
@@ -188,6 +194,7 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
     ? neighborhoods.join(", ")
     : "Consulte o atendimento para confirmar a cobertura."
   const hoursText = getHoursText(initialSettings)
+  const whatsappHref = formatWhatsAppHref(initialSettings.whatsapp)
 
   return (
     <div className="pb-16">
@@ -240,6 +247,32 @@ export function HomeClient({ initialSettings }: HomeClientProps) {
                   <ShieldCheck className="h-5 w-5 text-emerald-300" />
                   PIX, dinheiro, debito, credito e pagamento no balcao
                 </div>
+              </div>
+
+              <div className="animate-fade-in-up stagger-3">
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex w-full items-center justify-between gap-4 rounded-[28px] border border-emerald-400/20 bg-emerald-500/10 px-5 py-4 text-left transition-all duration-300 hover:border-emerald-300/35 hover:bg-emerald-500/15 sm:w-auto sm:min-w-[360px]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-200">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
+                        WhatsApp da loja
+                      </p>
+                      <p className="mt-1 text-base font-bold text-white">
+                        {initialSettings.whatsapp}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-emerald-100 transition-transform duration-300 group-hover:translate-x-1">
+                    Chamar agora
+                  </span>
+                </a>
               </div>
 
               <div className="animate-fade-in-up grid gap-3 sm:grid-cols-3 stagger-4">
