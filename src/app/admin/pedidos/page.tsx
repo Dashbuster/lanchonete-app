@@ -82,7 +82,7 @@ const STATUS_STEPS: Record<OrderStatus, StatusStep> = {
   },
   [OrderStatus.DELIVERED]: {
     status: OrderStatus.DELIVERED,
-    label: "Entregue",
+    label: "Saiu para entrega",
     icon: <Truck className="w-4 h-4" />,
     color: "success",
   },
@@ -108,7 +108,7 @@ const FILTER_LABELS: Record<OrderFilter, string> = {
   [OrderStatus.CONFIRMED]: "Confirmados",
   [OrderStatus.PREPARING]: "Em Preparo",
   [OrderStatus.READY]: "Prontos",
-  [OrderStatus.DELIVERED]: "Entregues",
+  [OrderStatus.DELIVERED]: "Saiu para entrega",
   [OrderStatus.CANCELLED]: "Cancelados",
 }
 

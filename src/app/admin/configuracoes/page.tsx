@@ -1063,7 +1063,8 @@ export default function ConfiguracoesPage() {
           </div>
           <p>1. Pedido criado: mensagem de confirmacao.</p>
           <p>2. Pagamento aprovado: confirmacao de pagamento.</p>
-          <p>3. Pedido marcado como pronto: aviso de saida para entrega.</p>
+            <p>3. Pedido marcado como pronto: mensagem de pedido pronto.</p>
+            <p>4. Pedido marcado como saiu para entrega: aviso de pedido a caminho.</p>
         </div>
 
         <div className="flex flex-wrap gap-3">

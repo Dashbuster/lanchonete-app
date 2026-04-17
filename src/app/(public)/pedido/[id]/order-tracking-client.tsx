@@ -22,7 +22,7 @@ const STATUS_STEPS = [
   { status: OrderStatus.CONFIRMED, label: "Confirmado", icon: AlertCircle },
   { status: OrderStatus.PREPARING, label: "Em Preparo", icon: ChefHat },
   { status: OrderStatus.READY, label: "Pronto", icon: Package },
-  { status: OrderStatus.DELIVERED, label: "Entregue", icon: Truck },
+  { status: OrderStatus.DELIVERED, label: "Saiu para entrega", icon: Truck },
 ]
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -106,7 +106,7 @@ export function OrderTrackingClient({
     return STATUS_STEPS.findIndex((s) => s.status === order.status)
   }, [order])
 
-  const isComplete = order && order.status === OrderStatus.DELIVERED
+  const isOutForDelivery = order && order.status === OrderStatus.DELIVERED
   const isCancelled = order && order.status === OrderStatus.CANCELLED
 
   if (loading) {
@@ -188,11 +188,11 @@ export function OrderTrackingClient({
         </div>
       )}
 
-      {isComplete && (
+      {isOutForDelivery && (
         <div className="animate-scale-in mb-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center backdrop-blur-sm">
           <CheckCircle2 className="w-20 h-20 mx-auto text-emerald-400 mb-4 animate-bounce" />
-          <h2 className="text-2xl font-bold text-emerald-300">Pedido Entregue!</h2>
-          <p className="text-dark-300 mt-2">Obrigado por pedir na {storeName}. Bom apetite!</p>
+          <h2 className="text-2xl font-bold text-emerald-300">Pedido saiu para entrega</h2>
+          <p className="text-dark-300 mt-2">Seu pedido ja saiu da {storeName} e esta a caminho.</p>
         </div>
       )}
 
